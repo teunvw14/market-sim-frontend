@@ -54,7 +54,7 @@
     // Initialize WebSocket with buffering and 1s reconnection delay
     const ws = new WebsocketBuilder("ws://127.0.0.1:5556")
         .withBuffer(new ArrayQueue())           // buffer messages when disconnected
-        .withBackoff(new ConstantBackoff(2500)) // retry every 1s
+        .withBackoff(new ConstantBackoff(1000)) // retry every 1s
         .build();
 
     function parse_mp_price(n: number) {
@@ -136,72 +136,97 @@
 
 </script>
 
-<div class="w-full h-screen flex flex-col">
-    <div class="flex justify-around">
+<div class="w-full h-screen flex flex-col bg-mist-900 text-white">
+    <header class="flex justify-around bg-mist-950 p-4 mb-4">
         <h1 class="text-3xl">
             Live Exchange View
         </h1>
-    </div>
-    <div class="w-[50vh] flex flex-col">
+    </header>
+    <div class="flex justify-around justify-items-center">
+    <div class="min-w-[500px] w-[50vw] flex flex-col border-2 rounded-lg p-2 bg-[#0e181e]">
         <div class="flex flex-row w-full">
             <div class="w-1/5">
                 Symbol
             </div>
             <div class="flex w-4/5" id="bid-ask">
-                <div class="w-1/2 flex justify-end mr-2" id="bid">
-                    Bid
+                <div class="w-1/2 flex justify-end pr-2" id="bid">
+                    <div class="w-1/2 flex justify-end pr-2">
+                    <p>
+                        volume
+                    </p>
+                    </div>
+                    <div class="w-1/2 flex justify-end">
+                    <p>
+                        Bid
+                    </p>
+                    </div>
                 </div>
-                <div class="w-1/2 flex justify-start mr-2" id="bid">
-                    Ask
+                <div class="w-1/2 flex justify-start pl-2" id="bid">
+                    <div class="w-1/2 flex justify-start">
+                    <p>
+                        Ask
+                    </p>
+                    </div>
+                    <div class="w-1/2 flex justify-start pl-2">
+                    <p>
+                        volume
+                    </p>
+                    </div>
                 </div>
 
             </div>
         </div>
         {#each marketL1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
-            <div class="flex w-full text-xl">
-                <div class="w-1/5">
-                    ({getAssetSymbol(marketL1.pair.primary)}/{getAssetSymbol(marketL1.pair.secondary)})
+            <div class="flex w-full text-xl border-t-2">
+                <div class="w-1/5 border-r-2">
+                    {getAssetSymbol(marketL1.pair.primary)}/{getAssetSymbol(marketL1.pair.secondary)}
                 </div>
                 <div class="flex w-4/5" id="market-bid-ask">
-                    <div class="w-1/2 flex justify-end mr-2 bg-green-300" id="market-bid">
-                        <div>
-                        {#if marketL1.orderbook.best_bid != null}
-                        ({marketL1.orderbook.best_bid.volume})
-                        {:else}
-                        ()
-                        {/if}
+                    <div class="w-1/2 flex pr-2 border-r-2" id="market-bid">
+                        <div class="w-1/2 flex justify-end pr-2 border-r-2">
+                        <p class="text-green-400">
+                            {#if marketL1.orderbook.best_bid != null}
+                            {marketL1.orderbook.best_bid.volume}
+                            {:else}
+                            -
+                            {/if}
+                        </p>
                         </div>
-                        <div class="w-1/2">
+                        <div class="w-1/2 flex justify-end">
+                        <p class="font-bold text-green-400">
                         {#if marketL1.orderbook.best_bid != null}
                         {marketL1.orderbook.best_bid.price.toFixed(3)}
                         {:else}
                         -
                         {/if}
+                        </p>
                         </div>
                     </div>
-                    <div class="w-1/2 flex justify-start ml-2 bg-red-300" id="market-ask">
-                        <div class="w-1/2">
-                        {#if marketL1.orderbook.best_ask != null}
-                        {marketL1.orderbook.best_ask.price.toFixed(3)}
-                        {:else}
-                        -
-                        {/if}
+                    <div class="w-1/2 flex pl-2 border-l-2" id="market-ask">
+                        <div class="w-1/2 justify-start">
+                        <p class="font-bold text-red-400">
+                            {#if marketL1.orderbook.best_ask != null}
+                            {marketL1.orderbook.best_ask.price.toFixed(3)}
+                            {:else}
+                            -
+                            {/if}
+                        </p>
                         </div>
-                        <div>
-                        {#if marketL1.orderbook.best_ask != null}
-                        ({marketL1.orderbook.best_ask.volume})
-                        {:else}
-                        ()
-                        {/if}
+                        <div class="w-1/2 justify-start border-l-2 pl-2">
+                        <p class="text-red-400 ">
+                            {#if marketL1.orderbook.best_ask != null}
+                            {marketL1.orderbook.best_ask.volume}
+                            {:else}
+                            -
+                            {/if}
+                        </p>
                         </div>
                     </div>
                 </div>
             </div>
         {/each}
     </div>
+    </div>
 </div>
 
 
-
-
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
