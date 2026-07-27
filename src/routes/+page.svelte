@@ -1,15 +1,29 @@
 <script lang="ts">
     import {
         ArrayQueue,
-        ConstantBackoff,
+        ExponentialBackoff,
         Websocket,
         WebsocketBuilder,
         WebsocketEvent,
     } from "websocket-ts";
 
+    import Chart from 'chart.js/auto';
+    import 'chartjs-adapter-date-fns';
+
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
 
     const FIXED_POINT_MULT = 2 ** (31)
+
+    interface AssetIdPair {
+        primary: number,
+        secondary: number,
+    }
+
+    interface Asset {
+        id: number,
+        name: string,
+        symbol: string, 
+    }
 
     interface PriceLevelAggregate {
         price: number,
@@ -26,18 +40,27 @@
         best_ask: PriceLevelAggregate | null,
     }
 
-    interface AssetIdPair {
-        primary: number,
-        secondary: number,
+    interface ExchangeMetrics {
+        p50: number,
+        p90: number,
+        p999: number,
     }
 
-    interface Asset {
-        id: number,
-        name: string,
-        symbol: string, 
+    interface ExchangeState {
+        l1s: MarketL1[],
+        metrics: ExchangeMetrics,
     }
 
-    let marketL1s: MarketL1[] = $state([]);
+    let DEFAULT_EXCHANGE_STATE: ExchangeState = {
+        l1s: [],
+        metrics: {
+            p50: 0,
+            p90: 0,
+            p999: 0,
+        }
+    }
+
+    let exchangeState: ExchangeState = $state(DEFAULT_EXCHANGE_STATE);
     let exchangeAssets: Asset[] = $state([]);
     let receivedAssetsMessage = false;
 
@@ -53,9 +76,10 @@
 
     // Initialize WebSocket with buffering and 1s reconnection delay
     const ws = new WebsocketBuilder("ws://127.0.0.1:5556")
-        .withBuffer(new ArrayQueue())           // buffer messages when disconnected
-        .withBackoff(new ConstantBackoff(1000)) // retry every 1s
+        .withBuffer(new ArrayQueue()) // buffer messages when disconnected
+        .withBackoff(new ExponentialBackoff(1000, 6)) // retry every 1s, max of 64s
         .build();
+    let exchangeConnected: boolean = $state(false);
 
     function parse_mp_price(n: number) {
         return n / FIXED_POINT_MULT
@@ -84,10 +108,14 @@
     }
 
     // Function to output & echo received messages
-    async function updateMarketL1s(messageData: any) {
-        let l1s = await decodeFromBlob(messageData);
-        marketL1s = []
-        for (const l1_info of l1s) {
+    async function updateExchangeState(messageData: any) {
+        let exchangeStateDecoded = await decodeFromBlob(messageData);
+        let l1sDecoded = exchangeStateDecoded[0];
+        let metricsDecoded = exchangeStateDecoded[1];
+        
+        // Update l1s
+        exchangeState.l1s = []
+        for (const l1_info of l1sDecoded) {
             let pair: AssetIdPair = {
                 primary: l1_info[0][0],
                 secondary: l1_info[0][1]
@@ -111,38 +139,104 @@
                 pair,
                 orderbook
             }
-            marketL1s.push(marketL1)
+            exchangeState.l1s.push(marketL1)
         }
+
+        // Update exchange metrics
+        exchangeState.metrics.p50  = metricsDecoded[0];
+        exchangeState.metrics.p90  = metricsDecoded[1];
+        exchangeState.metrics.p999 = metricsDecoded[2];
+        p50s.push(exchangeState.metrics.p50);
+        p90s.push(exchangeState.metrics.p90);
+        p999s.push(exchangeState.metrics.p999);
+        latency_arrival_times.push(Date.now());
     };
 
     async function handleMessage(i: Websocket, ev: MessageEvent) {
         if (!receivedAssetsMessage) {
-            updateAssets(ev.data);
             receivedAssetsMessage = true;
+            await updateAssets(ev.data);
         } else{
-            updateMarketL1s(ev.data);
+            updateExchangeState(ev.data);
         }
     }
 
+    let p50s = $state([]);
+    let p90s = $state([]);
+    let p999s = $state([]);
+    let latency_arrival_times = $state([]);
+
+    let latency_chart_canvas: HTMLCanvasElement;
+
+    $effect(() => {
+        let chart = new Chart(
+            latency_chart_canvas,
+            {
+                type: 'line',
+                data: {
+                    labels: latency_arrival_times,
+                    datasets: [
+                        { label: 'p50', data: [...p50s] },
+                        { label: 'p90', data: [...p90s] },
+                        { label: 'p99.9', data: [...p999s] },
+                    ]
+                },
+                options: {
+                    scales: { 
+                        x: { type: 'time', ticks: { maxTicksLimit: 10 } },
+                        y: { type: 'logarithmic', ticks: { maxTicksLimit: 12 } },
+                    },
+                    animation: false,
+                }
+            }
+        );
+        return () => chart.destroy();
+    });
+
     function onConnOpen() {
-        console.log("opened!"); 
+        console.log("Opened server connection!"); 
         receivedAssetsMessage = false;
+        exchangeConnected = true;
+    }
+
+    function onConnClose() {
+        console.log("Closed server connection.")
+        exchangeConnected = false;
     }
 
     // Add event listeners
     ws.addEventListener(WebsocketEvent.open, onConnOpen);
-    ws.addEventListener(WebsocketEvent.close, () => console.log("closed!"));
+    ws.addEventListener(WebsocketEvent.close, onConnClose);
     ws.addEventListener(WebsocketEvent.message, handleMessage);
 
 </script>
 
 <div class="w-full h-screen flex flex-col bg-mist-900 text-white">
-    <header class="flex justify-around bg-mist-950 p-4 mb-4">
+    <header class="flex justify-around items-center bg-mist-950 p-4 mb-4">
         <h1 class="text-3xl">
             Live Exchange View
         </h1>
+        <div class="flex w-1/2 justify-center gap-2">
+            <h2 class="font-bold">Order Latency (ms)</h2>
+            <div class="flex gap-1">
+                <h3>p50: </h3> <p>{exchangeState.metrics.p50 / 1000}</p>
+            </div>
+            <div class="flex gap-1">
+                <h3>p90: </h3> <p>{exchangeState.metrics.p90 / 1000}</p>
+            </div>
+            <div class="flex gap-1">
+                <h3>p99.9: </h3> <p>{exchangeState.metrics.p999 / 1000}</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between gap-2 font-bold">
+            {#if exchangeConnected == true}
+                <div class="bg-green-500 border border-gray-300 rounded-3xl w-3 h-3"></div> Connected
+            {:else}
+                <div class="bg-red-500 border border-gray-300 rounded-3xl w-3 h-3"></div> Disconnected
+            {/if}
+        </div>
     </header>
-    <div class="flex justify-around justify-items-center">
+    <div class="flex flex-col justify-around items-center">
     <div class="min-w-[500px] w-[50vw] flex flex-col border-2 rounded-lg p-2 bg-[#0e181e]">
         <div class="flex flex-row w-full">
             <div class="w-1/5">
@@ -176,7 +270,7 @@
 
             </div>
         </div>
-        {#each marketL1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
+        {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
             <div class="flex w-full text-xl border-t-2">
                 <div class="w-1/5 border-r-2">
                     {getAssetSymbol(marketL1.pair.primary)}/{getAssetSymbol(marketL1.pair.secondary)}
@@ -227,6 +321,7 @@
         {/each}
     </div>
     </div>
+    <canvas bind:this={latency_chart_canvas}></canvas>
 </div>
 
 
