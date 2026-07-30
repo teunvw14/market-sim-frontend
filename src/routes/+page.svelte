@@ -483,42 +483,6 @@
             </div>
         </div>
     </div>
-    <Table striped={true}>
-        <TableHead>
-            <TableHeadCell>
-                Bla
-            </TableHeadCell>
-            <TableHeadCell>
-                Bla2
-            </TableHeadCell>
-        </TableHead>
-        <TableBody>
-            <TableBodyRow>
-                <TableBodyCell>
-                    1
-                </TableBodyCell>
-                <TableBodyCell>
-                    2
-                </TableBodyCell>
-            </TableBodyRow>
-            <TableBodyRow>
-                <TableBodyCell>
-                    3
-                </TableBodyCell>
-                <TableBodyCell>
-                    4
-                </TableBodyCell>
-            </TableBodyRow>
-            <TableBodyRow>
-                <TableBodyCell>
-                    5
-                </TableBodyCell>
-                <TableBodyCell>
-                    6
-                </TableBodyCell>
-            </TableBodyRow>
-        </TableBody>
-    </Table>
     <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950">
         <div>
             (C) Teun van Wezel
