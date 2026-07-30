@@ -305,12 +305,12 @@
             {/if}
         </div>
     </header>
-    <div class="flex flex-col justify-around items-center gap-4 px-4 w-full lg:w-3/4 2xl:w-2/5">
+    <div class="flex flex-col justify-around items-center gap-16 px-4 w-full lg:w-3/4 2xl:w-2/5">
         <div class="flex flex-col w-full gap-2">
-            <div class="text-xl font-bold">
+            <div class="text-3xl font-bold">
                 Markets
             </div>
-            <div class="w-full flex flex-col border-2 rounded-sm bg-slate-900">
+            <div class="w-full flex flex-col border-2 rounded-sm bg-slate-900 text-slate-200 text-sm sm:text-lg divide-y">
                 <div class="flex flex-row w-full">
                     <div class="w-1/5 px-2">
                         Symbol
@@ -343,14 +343,14 @@
 
                     </div>
                 </div>
-            {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
-                <div class="flex w-full text-xl border-t-2 px-2">
-                    <div class="w-1/5 border-r-2">
+                {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
+                <div class="flex w-full divide-x">
+                    <div class="w-1/5 pl-1">
                         {getMarketSymbolic(marketL1.pair)}
                     </div>
-                    <div class="flex w-4/5" id="market-bid-ask">
-                        <div class="w-1/2 flex pr-2 border-r-2" id="market-bid">
-                            <div class="w-1/2 flex justify-start pr-2 border-r-2">
+                    <div class="flex w-4/5 divide-x" id="market-bid-ask">
+                        <div class="w-1/2 flex px-2 divide-x" id="market-bid">
+                            <div class="w-1/2 flex justify-start">
                             <p class="text-green-400 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.volume}
@@ -369,24 +369,24 @@
                             </p>
                             </div>
                         </div>
-                        <div class="w-1/2 flex pl-2 border-l-2" id="market-ask">
+                        <div class="w-1/2 flex px-2 divide-x" id="market-ask">
                             <div class="flex w-1/2 justify-start">
-                            <p class="font-bold text-red-400 tabular-nums">
-                                {#if marketL1.orderbook.best_ask != null}
-                                {marketL1.orderbook.best_ask.price.toFixed(2)}
-                                {:else}
-                                -
-                                {/if}
-                            </p>
+                                <p class="font-bold text-red-400 tabular-nums">
+                                    {#if marketL1.orderbook.best_ask != null}
+                                    {marketL1.orderbook.best_ask.price.toFixed(2)}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </p>
                             </div>
-                            <div class="flex w-1/2 justify-end border-l-2 pl-2">
-                            <p class="text-red-400 tabular-nums">
-                                {#if marketL1.orderbook.best_ask != null}
-                                {marketL1.orderbook.best_ask.volume}
-                                {:else}
-                                -
-                                {/if}
-                            </p>
+                            <div class="flex w-1/2 justify-end pl-2">
+                                <p class="text-red-400 tabular-nums">
+                                    {#if marketL1.orderbook.best_ask != null}
+                                    {marketL1.orderbook.best_ask.volume}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -395,19 +395,19 @@
             </div>
         </div>
         <div class="flex flex-col items-center w-full gap-2">
-            <div class="flex w-full justify-between">
-                <div class="text-xl font-bold">
+            <div class="flex w-full justify-between items-end">
+                <div class="text-3xl font-bold">
                     Transactions
                 </div>
-                <div class="flex items-start gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
+                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
                     <p class="font-light">TPS</p> 
-                    <p class="font-bold text-4xl">{tps100.toFixed(1)}</p>
+                    <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                 </div>
             </div>
-            <div class="flex flex-col items-center w-full h-[40vh] border-2 rounded-sm divide-y-2 divide-amber-50 bg-slate-900">
+            <div class="flex flex-col min-w-125 overflow-x-scroll items-center w-full h-[40vh] border-2 rounded-sm divide-y-2 divide-amber-50 bg-slate-900 text-slate-200 text-sm sm:text-lg">
                 <div class="flex w-full divide-x-2 gap-1 px-2 font-bold" id="transactions_header">
                     <div class="w-1/5">
-                        t
+                        Time
                     </div>
                     <div class="w-1/5">
                         Pair
@@ -463,17 +463,17 @@
         </div>
         <div class="flex flex-col items-center w-full h-[50vh] gap-2">
             <div class="flex flex-col w-full justify-between items-center gap-2">
-                <div class="flex w-full justify-between">
-                    <div class="text-xl font-bold">
+                <div class="flex w-full justify-between items-end">
+                    <div class="text-md font-bold">
                         Command Latency (ms)
                     </div>
-                    <div class="flex items-start gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
-                        <p class="font-light">p50</p>
-                        <p class="font-bold text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
-                        <p class="font-light">p90</p>
-                        <p class="font-bold text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
-                        <p class="font-light">p99.9</p>
-                        <p class="font-bold text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
+                    <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
+                        <p class="font-light text-xs md:text-md">p50</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
+                        <p class="font-light text-xs md:text-md">p90</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
+                        <p class="font-light text-xs md:text-md">p99.9</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
                     </div>
                 </div>
             </div>
