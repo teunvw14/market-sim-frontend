@@ -5,6 +5,31 @@
 @source "../../node_modules/flowbite-svelte/dist";
 @source "../../node_modules/flowbite-svelte-icons/dist";
 
+@theme {
+  --color-primary-50: #fff5f2;
+  --color-primary-100: #fff1ee;
+  --color-primary-200: #ffe4de;
+  --color-primary-300: #ffd5cc;
+  --color-primary-400: #ffbcad;
+  --color-primary-500: #fe795d;
+  --color-primary-600: #ef562f;
+  --color-primary-700: #eb4f27;
+  --color-primary-800: #cc4522;
+  --color-primary-900: #a5371b;
+
+  --color-secondary-50: #edf2ff;
+  --color-secondary-100: #c7d7ff;
+  --color-secondary-200: #4762a8;
+  --color-secondary-300: #2e4274;
+  --color-secondary-400: #1a2950;
+  --color-secondary-500: #0f172b;
+  --color-secondary-600: #070c1a;
+  --color-secondary-700: #051118;
+  --color-secondary-800: #00334e;
+  --color-secondary-900: #000c13;
+}
+
+
 @layer base {
   /* disable chrome cancel button */
   input[type="search"]::-webkit-search-cancel-button {
@@ -18,4 +43,8 @@ scrollbar-width: none;        /* Firefox */
 }
 .no-scrollbar::-webkit-scrollbar {
 display: none;                /* Chrome, Safari */
+}
+
+div {
+  font-family: 'DM Sans';
 }

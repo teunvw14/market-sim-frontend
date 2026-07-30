@@ -1,3 +1,8 @@
+<svelte:head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+    </style>
+</svelte:head>
 <script lang="ts">
     import {
         ArrayQueue,
@@ -295,10 +300,10 @@
 
 <div class="w-full flex flex-col items-center bg-mist-900 text-white">
     <header class="flex justify-between items-center bg-mist-950 p-4 mb-4 w-full">
-        <h1 class="text-xl">
+        <h1 class="text-lg sm:text-5xl font-black">
             Live Exchange View
         </h1>
-        <div class="flex items-center justify-between gap-2 font-bold">
+        <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
             {#if exchangeConnected == true}
                 <div class="bg-green-500 border border-gray-300 rounded-3xl w-3 h-3"></div> Connected
             {:else}
@@ -306,168 +311,121 @@
             {/if}
         </div>
     </header>
-    <div class="flex flex-col justify-around items-center gap-16 px-4 w-full lg:w-3/4 2xl:w-2/5">
+    <div class="flex flex-col justify-around items-center gap-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
         <div class="flex flex-col w-full gap-2">
-            <div class="text-3xl font-bold">
-                Markets
+            <div class="w-full px-2">
+                <h2 class="text-3xl">
+                    Markets
+                </h2>
             </div>
-            <div class="w-full flex flex-col border-2 rounded-sm bg-slate-900 text-slate-200 text-sm sm:text-lg divide-y">
-                <div class="flex flex-row w-full">
-                    <div class="w-1/5 px-2">
-                        Symbol
-                    </div>
-                    <div class="flex w-4/5" id="bid-ask">
-                        <div class="w-1/2 flex justify-end pr-2" id="bid">
-                            <div class="w-1/2 flex justify-end pr-2">
-                            <p>
-                                volume
-                            </p>
-                            </div>
-                            <div class="w-1/2 flex justify-end">
-                            <p>
-                                Bid
-                            </p>
-                            </div>
-                        </div>
-                        <div class="w-1/2 flex justify-start pl-2" id="bid">
-                            <div class="w-1/2 flex justify-start">
-                            <p>
-                                Ask
-                            </p>
-                            </div>
-                            <div class="w-1/2 flex justify-start pl-2">
-                            <p>
-                                volume
-                            </p>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-                {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
-                <div class="flex w-full divide-x">
-                    <div class="w-1/5 pl-1">
-                        {getMarketSymbolic(marketL1.pair)}
-                    </div>
-                    <div class="flex w-4/5 divide-x" id="market-bid-ask">
-                        <div class="w-1/2 flex px-2 divide-x" id="market-bid">
-                            <div class="w-1/2 flex justify-start">
-                            <p class="text-green-400 tabular-nums">
+            <Table hoverable={true} divClass="w-full no-scrollbar" color="secondary">
+                <TableHead>
+                    <TableHeadCell>Symbol</TableHeadCell>
+                    <TableHeadCell class="hidden sm:block text-left">Volume</TableHeadCell>
+                    <TableHeadCell class="text-right">Bid</TableHeadCell>
+                    <TableHeadCell class="text-left">Ask</TableHeadCell>
+                    <TableHeadCell class="hidden sm:block text-right">Volume</TableHeadCell>
+                </TableHead>
+                <TableBody>
+                    {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
+                        <TableBodyRow>
+                            <TableBodyCell>
+                                {getMarketSymbolic(marketL1.pair)}
+                            </TableBodyCell>
+                            <TableBodyCell class="hidden sm:block text-left text-green-400 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.volume}
                                 {:else}
                                 -
                                 {/if}
-                            </p>
-                            </div>
-                            <div class="w-1/2 flex justify-end">
-                            <p class="font-bold text-green-400 tabular-nums">
-                            {#if marketL1.orderbook.best_bid != null}
-                            {marketL1.orderbook.best_bid.price.toFixed(2)}
-                            {:else}
-                            -
-                            {/if}
-                            </p>
-                            </div>
-                        </div>
-                        <div class="w-1/2 flex px-2 divide-x" id="market-ask">
-                            <div class="flex w-1/2 justify-start">
-                                <p class="font-bold text-red-400 tabular-nums">
-                                    {#if marketL1.orderbook.best_ask != null}
-                                    {marketL1.orderbook.best_ask.price.toFixed(2)}
-                                    {:else}
-                                    -
-                                    {/if}
-                                </p>
-                            </div>
-                            <div class="flex w-1/2 justify-end pl-2">
-                                <p class="text-red-400 tabular-nums">
-                                    {#if marketL1.orderbook.best_ask != null}
-                                    {marketL1.orderbook.best_ask.volume}
-                                    {:else}
-                                    -
-                                    {/if}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {/each}
-            </div>
+                            </TableBodyCell>
+                            <TableBodyCell class="text-right font-bold text-green-400 tabular-nums">
+                                {#if marketL1.orderbook.best_bid != null}
+                                {marketL1.orderbook.best_bid.price.toFixed(2)}
+                                {:else}
+                                -
+                                {/if}
+                            </TableBodyCell>
+                            <TableBodyCell class="text-left font-bold text-red-400 tabular-nums">
+                                {#if marketL1.orderbook.best_ask != null}
+                                {marketL1.orderbook.best_ask.price.toFixed(2)}
+                                {:else}
+                                -
+                                {/if}
+                            </TableBodyCell>
+                            <TableBodyCell class="hidden sm:block text-right text-red-400 tabular-nums">
+                                {#if marketL1.orderbook.best_ask != null}
+                                {marketL1.orderbook.best_ask.volume}
+                                {:else}
+                                -
+                                {/if}
+                            </TableBodyCell>
+                        </TableBodyRow>
+                    {/each}
+                </TableBody>
+            </Table>
         </div>
         <div class="flex flex-col items-center w-full gap-2">
-            <div class="flex w-full justify-between items-end">
-                <div class="text-3xl font-bold">
+            <div class="flex flex-col sm:flex-row w-full justify-between gap-4 px-2">
+                <h2 class="text-3xl">
                     Transactions
-                </div>
-                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
+                </h2>
+                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
                     <p class="font-light">TPS</p> 
                     <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                 </div>
             </div>
-            <div class="flex flex-col items-center w-full h-[40vh] border-2 rounded-sm divide-y-2 divide-amber-50 bg-slate-900 text-slate-200 text-sm sm:text-lg">
-                <div class="flex w-full divide-x-2 gap-1 px-2 font-bold" id="transactions_header">
-                    <div class="w-1/5">
-                        Time
-                    </div>
-                    <div class="w-1/5">
-                        Pair
-                    </div>
-                    <div class="w-1/6">
-                        Price
-                    </div>
-                    <div class="w-1/8">
-                        Vol.
-                    </div>
-                    <div class="w-1/8">
-                        Taker
-                    </div>
-                    <div class="w-1/6">
-                        dir.
-                    </div>
-                    <div class="w-1/8">
-                        Maker
-                    </div>
-                </div>
-                <div class="w-full overflow-y-auto no-scrollbar divide-y">
+            <div class="flex flex-col items-center w-full h-[40vh] divide-y-2 text-sm sm:text-lg">
+                <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar" color="secondary">
+                    <TableHead>
+                        <TableHeadCell>Time</TableHeadCell>
+                        <TableHeadCell>Pair</TableHeadCell>
+                        <TableHeadCell>Price</TableHeadCell>
+                        <TableHeadCell>Vol.</TableHeadCell>
+                        <TableHeadCell>Taker</TableHeadCell>
+                        <TableHeadCell>dir.</TableHeadCell>
+                        <TableHeadCell>Maker</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
                     {#each last100Transactions as transaction }
-                    <div class="flex w-full divide-x gap-1 px-2">
-                        <div class="w-1/5 font-light">
-                            {transaction.timestamp.toLocaleTimeString()}
-                        </div>
-                        <div class="w-1/5">
-                            {getMarketSymbolic(transaction.pair)}
-                        </div>
-                        <div class="w-1/6">
-                            {transaction.price.toFixed(2)}
-                        </div>
-                        <div class="w-1/8">
-                            {transaction.volume}
-                        </div>
-                        <div class="w-1/8">
-                            {transaction.taker}
-                        </div>
-                        <div class="w-1/6">
-                            {#if transaction.taker_side == 0}
-                            <p class="text-green-400">buy</p>
-                            {:else}
-                            <p class="text-red-400">sell</p>
-                            {/if}
-                        </div>
-                        <div class="w-1/8">
-                            {transaction.maker}
-                        </div>
-                    </div>
-                    {/each}
-                </div>
+                        <TableBodyRow>
+                            <TableBodyCell class="w-1/5 font-light">
+                                {transaction.timestamp.toLocaleTimeString()}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/5">
+                                {getMarketSymbolic(transaction.pair)}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/6">
+                                {transaction.price.toFixed(2)}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/8">
+                                {transaction.volume}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/8">
+                                {transaction.taker}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/6">
+                                {#if transaction.taker_side == 0}
+                                <p class="text-green-400">buy</p>
+                                {:else}
+                                <p class="text-red-400">sell</p>
+                                {/if}
+                            </TableBodyCell>
+                            <TableBodyCell class="w-1/8">
+                                {transaction.maker}
+                            </TableBodyCell>
+                        </TableBodyRow>
+                        {/each}
+                    </TableBody>
+                </Table>
             </div>
         </div>
         <div class="flex flex-col items-center w-full h-[50vh] gap-2">
             <div class="flex flex-col w-full justify-between items-center gap-2">
-                <div class="flex w-full justify-between items-end">
-                    <div class="text-md font-bold">
+                <div class="flex flex-col sm:flex-row w-full justify-between gap-4 px-2">
+                    <h2 class="text-4xl">
                         Command Latency (ms)
-                    </div>
+                    </h2>
                     <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
                         <p class="font-light text-xs md:text-md">p50</p>
                         <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
