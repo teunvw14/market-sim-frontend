@@ -9,6 +9,7 @@
 
     import Chart from 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
+  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Checkbox, TableSearch } from "flowbite-svelte";
 
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
     import { asset } from "$app/paths";
@@ -404,7 +405,7 @@
                     <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                 </div>
             </div>
-            <div class="flex flex-col min-w-125 overflow-x-scroll items-center w-full h-[40vh] border-2 rounded-sm divide-y-2 divide-amber-50 bg-slate-900 text-slate-200 text-sm sm:text-lg">
+            <div class="flex flex-col items-center w-full h-[40vh] border-2 rounded-sm divide-y-2 divide-amber-50 bg-slate-900 text-slate-200 text-sm sm:text-lg">
                 <div class="flex w-full divide-x-2 gap-1 px-2 font-bold" id="transactions_header">
                     <div class="w-1/5">
                         Time
@@ -482,6 +483,42 @@
             </div>
         </div>
     </div>
+    <Table striped={true}>
+        <TableHead>
+            <TableHeadCell>
+                Bla
+            </TableHeadCell>
+            <TableHeadCell>
+                Bla2
+            </TableHeadCell>
+        </TableHead>
+        <TableBody>
+            <TableBodyRow>
+                <TableBodyCell>
+                    1
+                </TableBodyCell>
+                <TableBodyCell>
+                    2
+                </TableBodyCell>
+            </TableBodyRow>
+            <TableBodyRow>
+                <TableBodyCell>
+                    3
+                </TableBodyCell>
+                <TableBodyCell>
+                    4
+                </TableBodyCell>
+            </TableBodyRow>
+            <TableBodyRow>
+                <TableBodyCell>
+                    5
+                </TableBodyCell>
+                <TableBodyCell>
+                    6
+                </TableBodyCell>
+            </TableBodyRow>
+        </TableBody>
+    </Table>
     <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950">
         <div>
             (C) Teun van Wezel
