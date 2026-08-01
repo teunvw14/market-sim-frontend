@@ -312,13 +312,13 @@
         </div>
     </header>
     <div class="flex flex-col justify-around items-center gap-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
-        <div class="flex flex-col w-full gap-2">
-            <div class="w-full px-2">
+        <div class="flex flex-col w-full overflow-clip rounded-md">
+            <div class="flex items-center w-full p-4 bg-secondary-200 text-secondary-700">
                 <h2 class="text-3xl">
                     Markets
                 </h2>
             </div>
-            <Table hoverable={true} divClass="w-full no-scrollbar" color="secondary">
+            <Table hoverable={true} divClass="w-full no-scrollbar border-2 border-secondary-200" color="secondary">
                 <TableHead>
                     <TableHeadCell>Symbol</TableHeadCell>
                     <TableHeadCell class="hidden sm:block text-left">Volume</TableHeadCell>
@@ -365,78 +365,74 @@
                 </TableBody>
             </Table>
         </div>
-        <div class="flex flex-col items-center w-full gap-2">
-            <div class="flex flex-col sm:flex-row w-full justify-between gap-4 px-2">
+        <div class="flex flex-col w-full h-[40vh] rounded-md overflow-clip">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-secondary-200 text-secondary-700">
                 <h2 class="text-3xl">
                     Transactions
                 </h2>
-                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
+                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900 text-amber-400">
                     <p class="font-light">TPS</p> 
                     <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                 </div>
             </div>
-            <div class="flex flex-col items-center w-full h-[40vh] divide-y-2 text-sm sm:text-lg">
-                <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar" color="secondary">
-                    <TableHead>
-                        <TableHeadCell>Time</TableHeadCell>
-                        <TableHeadCell>Pair</TableHeadCell>
-                        <TableHeadCell>Price</TableHeadCell>
-                        <TableHeadCell>Vol.</TableHeadCell>
-                        <TableHeadCell>Taker</TableHeadCell>
-                        <TableHeadCell>dir.</TableHeadCell>
-                        <TableHeadCell>Maker</TableHeadCell>
-                    </TableHead>
-                    <TableBody>
-                    {#each last100Transactions as transaction }
-                        <TableBodyRow>
-                            <TableBodyCell class="w-1/5 font-light">
-                                {transaction.timestamp.toLocaleTimeString()}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/5">
-                                {getMarketSymbolic(transaction.pair)}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/6">
-                                {transaction.price.toFixed(2)}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/8">
-                                {transaction.volume}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/8">
-                                {transaction.taker}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/6">
-                                {#if transaction.taker_side == 0}
-                                <p class="text-green-400">buy</p>
-                                {:else}
-                                <p class="text-red-400">sell</p>
-                                {/if}
-                            </TableBodyCell>
-                            <TableBodyCell class="w-1/8">
-                                {transaction.maker}
-                            </TableBodyCell>
-                        </TableBodyRow>
-                        {/each}
-                    </TableBody>
-                </Table>
-            </div>
+            <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar border-2 border-secondary-200 rounded-none sm:rounded-none" color="secondary">
+                <TableHead>
+                    <TableHeadCell>Time</TableHeadCell>
+                    <TableHeadCell>Pair</TableHeadCell>
+                    <TableHeadCell>Price</TableHeadCell>
+                    <TableHeadCell>Vol.</TableHeadCell>
+                    <TableHeadCell>Taker</TableHeadCell>
+                    <TableHeadCell>dir.</TableHeadCell>
+                    <TableHeadCell>Maker</TableHeadCell>
+                </TableHead>
+                <TableBody>
+                {#each last100Transactions as transaction }
+                    <TableBodyRow>
+                        <TableBodyCell class="w-1/5 font-light">
+                            {transaction.timestamp.toLocaleTimeString()}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/5">
+                            {getMarketSymbolic(transaction.pair)}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/6">
+                            {transaction.price.toFixed(2)}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/8">
+                            {transaction.volume}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/8">
+                            {transaction.taker}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/6">
+                            {#if transaction.taker_side == 0}
+                            <p class="text-green-400">buy</p>
+                            {:else}
+                            <p class="text-red-400">sell</p>
+                            {/if}
+                        </TableBodyCell>
+                        <TableBodyCell class="w-1/8">
+                            {transaction.maker}
+                        </TableBodyCell>
+                    </TableBodyRow>
+                    {/each}
+                </TableBody>
+            </Table>
         </div>
-        <div class="flex flex-col items-center w-full h-[50vh] gap-2">
-            <div class="flex flex-col w-full justify-between items-center gap-2">
-                <div class="flex flex-col sm:flex-row w-full justify-between gap-4 px-2">
-                    <h2 class="text-4xl">
-                        Command Latency (ms)
-                    </h2>
-                    <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900">
-                        <p class="font-light text-xs md:text-md">p50</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
-                        <p class="font-light text-xs md:text-md">p90</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
-                        <p class="font-light text-xs md:text-md">p99.9</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
-                    </div>
+        <div class="flex flex-col items-center w-full h-[50vh]">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-secondary-200 text-secondary-700">
+                <h2 class="text-4xl">
+                    Command Latency (ms)
+                </h2>
+                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900 text-amber-400">
+                    <p class="font-light text-xs md:text-md">p50</p>
+                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
+                    <p class="font-light text-xs md:text-md">p90</p>
+                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
+                    <p class="font-light text-xs md:text-md">p99.9</p>
+                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
                 </div>
             </div>
-            <div class="relative w-full h-5/6 flex-1 border-2 rounded-sm bg-slate-900">
+            <div class="relative w-full h-5/6 flex-1 border-2 border-secondary-200 bg-slate-900">
                 <canvas bind:this={latency_chart_canvas}></canvas>
             </div>
         </div>
