@@ -352,9 +352,9 @@
                         </TableBodyCell>
                         <TableBodyCell class="w-1/6">
                             {#if transaction.taker_side == 0}
-                            <p class="text-green-400">buy</p>
+                            <p class="text-green-500">buy</p>
                             {:else}
-                            <p class="text-red-400">sell</p>
+                            <p class="text-red-500">sell</p>
                             {/if}
                         </TableBodyCell>
                         <TableBodyCell class="w-1/8">
@@ -371,7 +371,7 @@
                     Markets
                 </h2>
             </div>
-            <Table hoverable={true} divClass="w-full no-scrollbar border-2 border-secondary-200" color="secondary">
+            <Table divClass="w-full no-scrollbar border-2 border-secondary-200" color="secondary">
                 <TableHead>
                     <TableHeadCell>Symbol</TableHeadCell>
                     <TableHeadCell class="hidden sm:block text-left">Volume</TableHeadCell>
@@ -385,28 +385,28 @@
                             <TableBodyCell>
                                 {getMarketSymbolic(marketL1.pair)}
                             </TableBodyCell>
-                            <TableBodyCell class="hidden sm:block text-left text-green-400 tabular-nums">
+                            <TableBodyCell class="hidden sm:block text-left text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.volume}
                                 {:else}
                                 -
                                 {/if}
                             </TableBodyCell>
-                            <TableBodyCell class="text-right font-bold text-green-400 tabular-nums">
+                            <TableBodyCell class="text-right font-bold text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.price.toFixed(2)}
                                 {:else}
                                 -
                                 {/if}
                             </TableBodyCell>
-                            <TableBodyCell class="text-left font-bold text-red-400 tabular-nums">
+                            <TableBodyCell class="text-left font-bold text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
                                 {marketL1.orderbook.best_ask.price.toFixed(2)}
                                 {:else}
                                 -
                                 {/if}
                             </TableBodyCell>
-                            <TableBodyCell class="hidden sm:block text-right text-red-400 tabular-nums">
+                            <TableBodyCell class="hidden sm:block text-right text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
                                 {marketL1.orderbook.best_ask.volume}
                                 {:else}
