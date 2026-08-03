@@ -298,9 +298,9 @@
 
 </script>
 
-<div class="w-full flex flex-col items-center bg-mist-900 text-white">
-    <header class="flex justify-between items-center bg-mist-950 p-4 mb-4 w-full">
-        <h1 class="text-lg sm:text-5xl font-black">
+<div class="w-full flex flex-col items-center bg-pal4 text-white min-w-82">
+    <header class="flex justify-between items-center bg-pal2 p-4 w-full text-pal4">
+        <h1 class="text-lg sm:text-4xl font-black">
             Live Exchange View
         </h1>
         <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
@@ -311,18 +311,18 @@
             {/if}
         </div>
     </header>
-    <div class="flex flex-col justify-around items-center gap-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
-                <div class="flex flex-col w-full h-[40vh] rounded-md overflow-clip">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-secondary-200 text-secondary-700">
+    <div class="flex flex-col justify-around items-center gap-8 px-4 my-4 w-full lg:w-3/4 2xl:w-2/5">
+        <div class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 text-pal4">
                 <h2 class="text-3xl">
                     Transactions
                 </h2>
-                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900 text-amber-400">
+                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1">
                     <p class="font-light">TPS</p> 
                     <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                 </div>
             </div>
-            <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar border-2 border-secondary-200 rounded-none sm:rounded-none" color="secondary">
+            <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar border-2 border-pal2 rounded-none sm:rounded-none" color="secondary">
                 <TableHead>
                     <TableHeadCell>Time</TableHeadCell>
                     <TableHeadCell>Pair</TableHeadCell>
@@ -365,13 +365,13 @@
                 </TableBody>
             </Table>
         </div>
-        <div class="flex flex-col w-full overflow-clip rounded-md">
-            <div class="flex items-center w-full p-4 bg-secondary-200 text-secondary-700">
+        <div class="flex flex-col w-full max-h-[50vh] overflow-clip">
+            <div class="flex items-center w-full p-4 bg-pal2 text-pal4">
                 <h2 class="text-3xl">
                     Markets
                 </h2>
             </div>
-            <Table divClass="w-full no-scrollbar border-2 border-secondary-200" color="secondary">
+            <Table divClass="w-full no-scrollbar border-2 border-pal2" color="secondary">
                 <TableHead>
                     <TableHeadCell>Symbol</TableHeadCell>
                     <TableHeadCell class="hidden sm:block text-left">Volume</TableHeadCell>
@@ -418,12 +418,12 @@
                 </TableBody>
             </Table>
         </div>
-        <div class="flex flex-col items-center w-full h-[50vh]">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-secondary-200 text-secondary-700">
+        <div class="flex flex-col items-center w-full min-h-125 h-[45vh]">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 text-pal4">
                 <h2 class="text-4xl">
                     Command Latency (ms)
                 </h2>
-                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 bg-slate-900 text-amber-400">
+                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1">
                     <p class="font-light text-xs md:text-md">p50</p>
                     <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
                     <p class="font-light text-xs md:text-md">p90</p>
@@ -432,7 +432,7 @@
                     <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
                 </div>
             </div>
-            <div class="relative w-full h-5/6 flex-1 border-2 border-secondary-200 bg-slate-900">
+            <div class="relative w-full h-5/6 flex-1 border-2 border-pal2 bg-slate-900">
                 <canvas bind:this={latency_chart_canvas}></canvas>
             </div>
         </div>

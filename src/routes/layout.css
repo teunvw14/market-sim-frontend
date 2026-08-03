@@ -27,6 +27,11 @@
   --color-secondary-700: hsl(231, 40%, 20%);
   --color-secondary-800: hsl(231, 40%, 15%);
   --color-secondary-900: hsl(231, 40%, 5%);
+
+  --color-pal1: #BF0603;
+  --color-pal2: #fffce5;
+  --color-pal3: #708D81;
+  --color-pal4: #001427;
 }
 
 @layer base {
