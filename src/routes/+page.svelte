@@ -14,7 +14,8 @@
 
     import Chart from 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
-  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Modal, P, A, Button } from "flowbite-svelte";
+    import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Modal, P, A, Button } from "flowbite-svelte";
+    import { CloseOutline, GithubSolid, LinkedinSolid } from "flowbite-svelte-icons";
 
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
     import { asset } from "$app/paths";
@@ -302,7 +303,7 @@
 <div class="w-full flex flex-col items-center bg-pal4 text-pal-4 min-w-82">
     <header class="flex justify-between items-center bg-pal2 p-4 w-full ">
         <h1 class="text-lg sm:text-4xl font-black">
-            Live Exchange View
+            Market Simulation Viewer
         </h1>
         <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
             {#if exchangeConnected == true}
@@ -313,12 +314,12 @@
         </div>
     </header>
     <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
-        <Button class="w-full bg-pal2 rounded-xl border-2 h-16 hover:cursor-pointer hover:bg-pal3 text-2xl text-pal4" onclick={() => (showInfoModal=true)}>
+        <Button class="w-full bg-pal2 rounded-lg border-2 h-16 hover:cursor-pointer hover:bg-pal3 text-2xl text-pal4" onclick={() => (showInfoModal=true)}>
             What is this?
         </Button>
         <Modal title="What is this?" form bind:open={showInfoModal} class="bg-pal2" headerClass="bg-pal3" size="lg">
             <P>
-                This is my market simulator. You're seeing a live view of bots trading on a <A href="https://github.com/teunvw14/market-sim-backend" target="_blank">custom Exchange Server</A> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots trade slowly though.
+                This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots trade slowly though.
            </P>
             <P>
                 On this page, you can see: 
@@ -329,11 +330,11 @@
                 <li><b>Latency</b>: How long do orders take to be processed?</li>
             </ul>
             <Button type="submit" class="bg-pal1 text-pal2 hover:cursor-pointer">
-                Close.
+                Cool! <CloseOutline />
             </Button>
         </Modal>
         <div class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
+            <div class="flex sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
                 <h2 class="text-3xl">
                     Transactions
                 </h2>
@@ -440,7 +441,7 @@
         </div>
         <div class="flex flex-col items-center w-full min-h-125 h-[45vh]">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
-                <h2 class="text-4xl">
+                <h2 class="text-2xl">
                     Command Latency (ms)
                 </h2>
                 <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1">
@@ -458,8 +459,10 @@
         </div>
     </div>
     <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950 text-pal2">
-        <div>
-            (C) Teun van Wezel
+        <div class="flex gap-2">
+            <p>(C) Teun van Wezel</p>
+            <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><GithubSolid /></a>
+            <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><LinkedinSolid /></a>
         </div>
         <div>
             Footer 
