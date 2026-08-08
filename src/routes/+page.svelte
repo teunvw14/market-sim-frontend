@@ -415,14 +415,14 @@
                             </TableBodyCell>
                             <TableBodyCell class="text-right font-bold text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
-                                {marketL1.orderbook.best_bid.price.toFixed(2)}
+                                {marketL1.orderbook.best_bid.price.toFixed(3)}
                                 {:else}
                                 -
                                 {/if}
                             </TableBodyCell>
                             <TableBodyCell class="text-left font-bold text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
-                                {marketL1.orderbook.best_ask.price.toFixed(2)}
+                                {marketL1.orderbook.best_ask.price.toFixed(3)}
                                 {:else}
                                 -
                                 {/if}
