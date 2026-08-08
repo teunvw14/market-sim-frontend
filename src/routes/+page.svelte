@@ -14,7 +14,7 @@
 
     import Chart from 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
-  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Checkbox, TableSearch } from "flowbite-svelte";
+  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Modal, P, A, Button } from "flowbite-svelte";
 
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
     import { asset } from "$app/paths";
@@ -296,10 +296,11 @@
     ws.addEventListener(WebsocketEvent.close, onConnClose);
     ws.addEventListener(WebsocketEvent.message, handleMessage);
 
+    let showInfoModal = $state(false);
 </script>
 
-<div class="w-full flex flex-col items-center bg-pal4 text-white min-w-82">
-    <header class="flex justify-between items-center bg-pal2 p-4 w-full text-pal4">
+<div class="w-full flex flex-col items-center bg-pal4 text-pal-4 min-w-82">
+    <header class="flex justify-between items-center bg-pal2 p-4 w-full ">
         <h1 class="text-lg sm:text-4xl font-black">
             Live Exchange View
         </h1>
@@ -311,9 +312,28 @@
             {/if}
         </div>
     </header>
-    <div class="flex flex-col justify-around items-center gap-8 px-4 my-4 w-full lg:w-3/4 2xl:w-2/5">
+    <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
+        <Button class="w-full bg-pal2 rounded-xl border-2 h-16 hover:cursor-pointer hover:bg-pal3 text-2xl text-pal4" onclick={() => (showInfoModal=true)}>
+            What is this?
+        </Button>
+        <Modal title="What is this?" form bind:open={showInfoModal} class="bg-pal2" headerClass="bg-pal3" size="lg">
+            <P>
+                This is my market simulator. You're seeing a live view of bots trading on a <A href="https://github.com/teunvw14/market-sim-backend" target="_blank">custom Exchange Server</A> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots trade slowly though.
+           </P>
+            <P>
+                On this page, you can see: 
+            </P>
+            <ul class="list-decimal list-outside ps-5 space-y-1 text-pal4">
+                <li><b>Transactions</b>: Live as they happen on the exchange server.</li>
+                <li><b>Markets</b>: The best bid/ask. Shows volumes on bigger screens.</li>
+                <li><b>Latency</b>: How long do orders take to be processed?</li>
+            </ul>
+            <Button type="submit" class="bg-pal1 text-pal2 hover:cursor-pointer">
+                Close.
+            </Button>
+        </Modal>
         <div class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 text-pal4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
                 <h2 class="text-3xl">
                     Transactions
                 </h2>
@@ -366,7 +386,7 @@
             </Table>
         </div>
         <div class="flex flex-col w-full max-h-[50vh] overflow-clip">
-            <div class="flex items-center w-full p-4 bg-pal2 text-pal4">
+            <div class="flex items-center w-full p-4 bg-pal2 ">
                 <h2 class="text-3xl">
                     Markets
                 </h2>
@@ -419,7 +439,7 @@
             </Table>
         </div>
         <div class="flex flex-col items-center w-full min-h-125 h-[45vh]">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 text-pal4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
                 <h2 class="text-4xl">
                     Command Latency (ms)
                 </h2>
@@ -432,12 +452,12 @@
                     <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
                 </div>
             </div>
-            <div class="relative w-full h-5/6 flex-1 border-2 border-pal2 bg-slate-900">
+            <div class="relative w-full flex-1 border-2 border-pal2 bg-slate-900">
                 <canvas bind:this={latency_chart_canvas}></canvas>
             </div>
         </div>
     </div>
-    <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950">
+    <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950 text-pal2">
         <div>
             (C) Teun van Wezel
         </div>
