@@ -24,7 +24,7 @@
     import * as Chart from "$lib/components/ui/chart/index.js";
 
     // layerchart
-    import { AreaChart } from "layerchart";
+    import { Area, AreaChart, defaultChartPadding, LinearGradient } from "layerchart";
 
     // messagepack
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
@@ -264,6 +264,7 @@
 	let latency_data = $state([]);
 
     const chartConfig = {
+
     } satisfies Chart.ChartConfig;
 
     let latency_chart_canvas: HTMLCanvasElement;
@@ -319,8 +320,8 @@
 <ModeWatcher />
 
 <div class="w-full flex flex-col items-center text-pal-4 min-w-82">
-    <header class="flex justify-between items-center px-4 sm:px-8 py-8 w-full bg-card">
-        <h1 class="text-lg sm:text-4xl font-black">
+    <header class="flex justify-between items-center p-4 sm:p-8 w-full bg-card">
+        <h1 class="text-lg sm:text-4xl font-bold">
             Market Sim Viewer
         </h1>
         <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
@@ -340,7 +341,7 @@
                 <Dialog.Header>
                 <Dialog.Title>What is this?</Dialog.Title>
                 <Dialog.Description>
-                    This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots like to take it easy though.
+                    This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots prefer to take it easy though.
                     <ul class="list-decimal list-outside ps-5 space-y-1">
                         <li><b>Transactions</b>: Live as they happen on the exchange server.</li>
                         <li><b>Markets</b>: The best bid/ask. Shows volumes on bigger screens.</li>
@@ -350,7 +351,10 @@
                 </Dialog.Header>
                 <Dialog.Footer class="sm:justify-start flex-col">
                     <Button href="https://github.com/teunvw14/market-sim-backend" target="_blank">
-                        Rust Backend <RiArrowRightUpLine />
+                        Rust Backend Code <RiArrowRightUpLine />
+                    </Button>
+                    <Button href="https://github.com/teunvw14/market-sim-frontend" target="_blank">
+                        Frontend Code <RiArrowRightUpLine />
                     </Button>
                     <Dialog.Close class={buttonVariants({ variant: "default" }) + " bg-red-500 hover:bg-red-400 hover:cursor-pointer"}>
                         Close <RiCloseLine />
@@ -425,10 +429,10 @@
                 <Table.Root>
                     <Table.Header><Table.Row>
                         <Table.Head>Symbol</Table.Head>
-                        <Table.Head class="hidden sm:table-cell text-left">Volume</Table.Head>
+                        <Table.Head class="hidden min-[480px]:table-cell text-left">Volume</Table.Head>
                         <Table.Head class="text-right">Bid</Table.Head>
                         <Table.Head class="text-left">Ask</Table.Head>
-                        <Table.Head class="hidden sm:table-cell text-right">Volume</Table.Head>           
+                        <Table.Head class="hidden min-[480px]:table-cell text-right">Volume</Table.Head>           
                     </Table.Row></Table.Header>
                     <Table.Body>
                        {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
@@ -436,7 +440,7 @@
                             <Table.Cell>
                                 {getMarketSymbolic(marketL1.pair)}
                             </Table.Cell>
-                            <Table.Cell class="hidden sm:table-cell text-left text-green-500 tabular-nums">
+                            <Table.Cell class="hidden min-[480px]:table-cell text-left text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.volume}
                                 {:else}
@@ -457,7 +461,7 @@
                                 -
                                 {/if}
                             </Table.Cell>
-                            <Table.Cell class="hidden sm:table-cell text-right text-red-500 tabular-nums">
+                            <Table.Cell class="hidden min-[480px]:table-cell text-right text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
                                 {marketL1.orderbook.best_ask.volume}
                                 {:else}
@@ -470,57 +474,63 @@
                 </Table.Root>
             </Card.Content>
         </Card.Root>
-        <Card.Root class="flex flex-col w-full min-h-100">
-            <Card.Header>
+        <Card.Root class="flex flex-col w-full">
+            <Card.Header class="flex flex-col sm:flex-row justify-between">
                 <Card.Title>
                     Command Latency
                 </Card.Title>
                 <Card.Description>
-                    In milliseconds. 
+                    In milliseconds.
                 </Card.Description>
-                <Card.Action>
-                    <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1">
-                        <p class="font-light text-xs md:text-md">p50</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
-                        <p class="font-light text-xs md:text-md">p90</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
-                        <p class="font-light text-xs md:text-md">p99.9</p>
-                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
-                    </div>
-                </Card.Action>
+                <div class="flex gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1">
+                    <p class="font-light text-xs md:text-md">p50</p>
+                    <p class="font-bold text-xl sm:text-3xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
+                    <p class="font-light text-xs md:text-md">p90</p>
+                    <p class="font-bold text-xl sm:text-3xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
+                    <p class="font-light text-xs md:text-md">p99.9</p>
+                    <p class="font-bold text-xl sm:text-3xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
+                </div>
             </Card.Header>
-            <Card.Content class="w-full">
-                <Chart.Container config={chartConfig}>
+            <Card.Content>
+                <Chart.Container config={chartConfig} class="w-full h-75 aspect-auto">
                     <AreaChart data={latency_data}
                         legend
                         x="date"
                         yDomain={[0, null]}
                         series={[
-                            { key: 'p999', label: 'p99.9', color: '#5490F0' },
+                            { key: 'p999', label: 'p99.9', color: '#2b3bc4' },
                             { key: 'p90', label: 'p90', color: '#295eb3' },
-                            { key: 'p50', label: 'p50', color: '#0b156e' },
-                        ]}  
+                            { key: 'p50', label: 'p50', color: '#5490F0' },
+                        ]}
+                        props={{ xAxis: { tickSpacing: 100 } }}
                     >
-                    	<!-- {#snippet marks()}
-                        <LinearGradient class="from-primary/50 to-primary/1" vertical>
-                            {#snippet children({ gradient })}
-                                <Area line={{ class: 'stroke-primary' }} fill={gradient} />
-                            {/snippet}
-                        </LinearGradient>
-                        {/snippet}   -->
+                    {#snippet marks({ context })}
+                        {#each context.series.series as s, i (s.key)}
+                            <!-- Can also use basic 'transparent' for second stop for better browser compatibility -->
+                            <LinearGradient
+                                stops={s.color
+                                    ? [s.color, 'color-mix(in lch, ' + s.color + ' 10%, transparent)']
+                                    : undefined}
+                                vertical
+                            >
+                                {#snippet children({ gradient })}
+                                    <Area seriesKey={s.key} line={{ stroke: s.color }} fill={gradient} fillOpacity={0.9} />
+                                {/snippet}
+                            </LinearGradient>
+                        {/each}
+                    {/snippet}
                     </AreaChart>
-                    </Chart.Container>
+                </Chart.Container>
             </Card.Content>
         </Card.Root>
     </div>
-    <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950 text-pal2">
+    <div class="flex w-full justify-between mt-4 py-4 px-8 bg-mist-950 text-pal2">
         <div class="flex gap-2">
             <p>(C) Teun van Wezel</p>
+        </div>
+        <div class="flex gap-2">
             <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><RiGithubFill /></a>
             <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><RiLinkedinBoxFill /></a>
-        </div>
-        <div>
-            Footer 
         </div>
     </div>
 </div>
