@@ -476,12 +476,14 @@
         </Card.Root>
         <Card.Root class="flex flex-col w-full">
             <Card.Header class="flex flex-col sm:flex-row justify-between">
-                <Card.Title>
-                    Command Latency
-                </Card.Title>
-                <Card.Description>
-                    In milliseconds.
-                </Card.Description>
+                <div>
+                    <Card.Title>
+                        Command Latency
+                    </Card.Title>
+                    <Card.Description>
+                        In milliseconds.
+                    </Card.Description>
+                </div>
                 <div class="flex gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1">
                     <p class="font-light text-xs md:text-md">p50</p>
                     <p class="font-bold text-xl sm:text-3xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
