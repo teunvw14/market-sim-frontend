@@ -12,12 +12,23 @@
         WebsocketEvent,
     } from "websocket-ts";
 
-    import Chart from 'chart.js/auto';
-    import 'chartjs-adapter-date-fns';
-    import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Modal, P, A, Button } from "flowbite-svelte";
-    import { CloseOutline, GithubSolid, LinkedinSolid } from "flowbite-svelte-icons";
+    import { ModeWatcher } from "mode-watcher";
 
+    import { RiGithubFill, RiLinkedinBoxFill, RiArrowRightUpLine, RiCloseLine } from "svelte-remixicon";
+
+    // shadcn Components
+    import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
+    import * as Dialog from "$lib/components/ui/dialog/index.js";
+    import * as Card from "$lib/components/ui/card/index.js";
+    import * as Table from "$lib/components/ui/table/index.js";
+    import * as Chart from "$lib/components/ui/chart/index.js";
+
+    // layerchart
+    import { AreaChart } from "layerchart";
+
+    // messagepack
     import { decode, decodeAsync, decodeMulti as mpDecode } from "@msgpack/msgpack";
+
     import { asset } from "$app/paths";
 
     const FIXED_POINT_MULT = 2 ** (31)
@@ -192,16 +203,27 @@
             exchangeState.metrics.p50  = metricsDecoded[1] / 1000;
             exchangeState.metrics.p90  = metricsDecoded[2] / 1000;
             exchangeState.metrics.p999 = metricsDecoded[3] / 1000;
+
             p50s.push(exchangeState.metrics.p50);
             p90s.push(exchangeState.metrics.p90);
             p999s.push(exchangeState.metrics.p999);
             latency_arrival_times.push(exchangeState.metrics.timestamp);
+
+            latency_data.push(
+                {
+                    date: new Date(exchangeState.metrics.timestamp),
+                    p50: exchangeState.metrics.p50,
+                    p90: exchangeState.metrics.p90,
+                    p999: exchangeState.metrics.p999,
+                }
+            )
     
             // Only keep last minute
             p50s = p50s.slice(-30);
             p90s = p90s.slice(-30);
             p999s = p999s.slice(-30);
             latency_arrival_times = latency_arrival_times.slice(-30);
+            latency_data = latency_data.slice(-30)
         }
 
         // Update recent transactions
@@ -234,52 +256,47 @@
             await updateExchangeState(ev.data);
         }
     }
-
+    
     let p50s = $state([]);
     let p90s = $state([]);
     let p999s = $state([]);
     let latency_arrival_times = $state([]);
+	let latency_data = $state([]);
+
+    const chartConfig = {
+    } satisfies Chart.ChartConfig;
 
     let latency_chart_canvas: HTMLCanvasElement;
     let chart: Chart | undefined;
 
-    $effect(() => {
-        chart = new Chart(
-            latency_chart_canvas,
-            {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        { label: 'p50', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#5490F077", pointRadius: 1, pointHoverRadius: 12 },
-                        { label: 'p90', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#295eb377", pointRadius: 1, pointHoverRadius: 12 },
-                        { label: 'p99.9', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#0b156e77", pointRadius: 1, pointHoverRadius: 12 },
-                    ]
-                },
-                options: {
-                    scales: { 
-                        x: { type: 'time', ticks: { maxTicksLimit: 2 }, grid: { color: '#ffffff33' }},
-                        y: { ticks: { maxTicksLimit: 12 }, grid: { color: '#ffffff33' } },
-                    },
-                    color: '#e5e7eb',
-                    animation: false,
-                    fill: true,
-                    maintainAspectRatio: false,
-                    responsive: true,
-                }
-            }
-        );
-    })
+    // $effect(() => {
+    //     chart = new Chart(
+    //         latency_chart_canvas,
+    //         {
+    //             type: 'line',
+    //             data: {
+    //                 labels: [],
+    //                 datasets: [
+    //                     { label: 'p50', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#5490F077", pointRadius: 1, pointHoverRadius: 12 },
+    //                     { label: 'p90', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#295eb377", pointRadius: 1, pointHoverRadius: 12 },
+    //                     { label: 'p99.9', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#0b156e77", pointRadius: 1, pointHoverRadius: 12 },
+    //                 ]
+    //             },
+    //             options: {
+    //                 scales: { 
+    //                     x: { type: 'time', ticks: { maxTicksLimit: 2 }, grid: { color: '#ffffff33' }},
+    //                     y: { ticks: { maxTicksLimit: 12 }, grid: { color: '#ffffff33' } },
+    //                 },
+    //                 color: '#e5e7eb',
+    //                 animation: false,
+    //                 fill: true,
+    //                 maintainAspectRatio: false,
+    //                 responsive: true,
+    //             }
+    //         }
+    //     );
+    // })
 
-    $effect(() => {
-        if (!chart) return;
-        chart.data.labels = latency_arrival_times;
-        chart.data.datasets[0].data = [...p50s];
-        chart.data.datasets[1].data = [...p90s];
-        chart.data.datasets[2].data = [...p999s];
-
-        chart.update();
-    });
 
     function onConnOpen() {
         console.log("Opened server connection!"); 
@@ -296,14 +313,15 @@
     ws.addEventListener(WebsocketEvent.open, onConnOpen);
     ws.addEventListener(WebsocketEvent.close, onConnClose);
     ws.addEventListener(WebsocketEvent.message, handleMessage);
-
-    let showInfoModal = $state(false);
+    
 </script>
 
-<div class="w-full flex flex-col items-center bg-pal4 text-pal-4 min-w-82">
-    <header class="flex justify-between items-center bg-pal2 p-4 w-full ">
+<ModeWatcher />
+
+<div class="w-full flex flex-col items-center text-pal-4 min-w-82">
+    <header class="flex justify-between items-center px-4 sm:px-8 py-8 w-full bg-card">
         <h1 class="text-lg sm:text-4xl font-black">
-            Market Simulation Viewer
+            Market Sim Viewer
         </h1>
         <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
             {#if exchangeConnected == true}
@@ -314,155 +332,192 @@
         </div>
     </header>
     <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
-        <Button class="w-full bg-pal2 rounded-lg border-2 h-16 hover:cursor-pointer hover:bg-pal3 text-2xl text-pal4" onclick={() => (showInfoModal=true)}>
-            What is this?
-        </Button>
-        <Modal title="What is this?" form bind:open={showInfoModal} class="bg-pal2" headerClass="bg-pal3" size="lg">
-            <P>
-                This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots trade slowly though.
-           </P>
-            <P>
-                On this page, you can see: 
-            </P>
-            <ul class="list-decimal list-outside ps-5 space-y-1 text-pal4">
-                <li><b>Transactions</b>: Live as they happen on the exchange server.</li>
-                <li><b>Markets</b>: The best bid/ask. Shows volumes on bigger screens.</li>
-                <li><b>Latency</b>: How long do orders take to be processed?</li>
-            </ul>
-            <Button type="submit" class="bg-pal1 text-pal2 hover:cursor-pointer">
-                Cool! <CloseOutline />
-            </Button>
-        </Modal>
-        <div class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
-            <div class="flex sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
-                <h2 class="text-3xl">
+        <Dialog.Root>
+            <Dialog.Trigger class={"w-full h-16 text-pal4 + hover:cursor-pointer " + buttonVariants({ variant: "default" })}>
+                <h1 class="text-xl">What is this?</h1>
+            </Dialog.Trigger>
+            <Dialog.Content class="sm:max-w-xl">
+                <Dialog.Header>
+                <Dialog.Title>What is this?</Dialog.Title>
+                <Dialog.Description>
+                    This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots like to take it easy though.
+                    <ul class="list-decimal list-outside ps-5 space-y-1">
+                        <li><b>Transactions</b>: Live as they happen on the exchange server.</li>
+                        <li><b>Markets</b>: The best bid/ask. Shows volumes on bigger screens.</li>
+                        <li><b>Latency</b>: How long do orders take to be processed?</li>
+                    </ul>
+                </Dialog.Description>
+                </Dialog.Header>
+                <Dialog.Footer class="sm:justify-start flex-col">
+                    <Button href="https://github.com/teunvw14/market-sim-backend" target="_blank">
+                        Rust Backend <RiArrowRightUpLine />
+                    </Button>
+                    <Dialog.Close class={buttonVariants({ variant: "default" }) + " bg-red-500 hover:bg-red-400 hover:cursor-pointer"}>
+                        Close <RiCloseLine />
+                    </Dialog.Close>
+                </Dialog.Footer>
+            </Dialog.Content>
+        </Dialog.Root>
+        <Card.Root class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
+            <Card.Header>
+                <Card.Title>
                     Transactions
-                </h2>
-                <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1">
-                    <p class="font-light">TPS</p> 
-                    <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
-                </div>
-            </div>
-            <Table shadow striped={true} hoverable={true} divClass="w-full no-scrollbar border-2 border-pal2 rounded-none sm:rounded-none" color="secondary">
-                <TableHead>
-                    <TableHeadCell>Time</TableHeadCell>
-                    <TableHeadCell>Pair</TableHeadCell>
-                    <TableHeadCell>Price</TableHeadCell>
-                    <TableHeadCell>Vol.</TableHeadCell>
-                    <TableHeadCell>Taker</TableHeadCell>
-                    <TableHeadCell>dir.</TableHeadCell>
-                    <TableHeadCell>Maker</TableHeadCell>
-                </TableHead>
-                <TableBody>
-                {#each last100Transactions as transaction }
-                    <TableBodyRow>
-                        <TableBodyCell class="w-1/5 font-light">
-                            {transaction.timestamp.toLocaleTimeString()}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/5">
-                            {getMarketSymbolic(transaction.pair)}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/6">
-                            {transaction.price.toFixed(2)}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/8">
-                            {transaction.volume}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/8">
-                            {transaction.taker}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/6">
-                            {#if transaction.taker_side == 0}
-                            <p class="text-green-500">buy</p>
-                            {:else}
-                            <p class="text-red-500">sell</p>
-                            {/if}
-                        </TableBodyCell>
-                        <TableBodyCell class="w-1/8">
-                            {transaction.maker}
-                        </TableBodyCell>
-                    </TableBodyRow>
-                    {/each}
-                </TableBody>
-            </Table>
-        </div>
-        <div class="flex flex-col w-full max-h-[50vh] overflow-clip">
-            <div class="flex items-center w-full p-4 bg-pal2 ">
-                <h2 class="text-3xl">
+                </Card.Title>
+                <Card.Action>
+                    <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1 tabular-nums">
+                        <p class="font-light">TPS</p> 
+                        <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
+                    </div>
+                </Card.Action>
+            </Card.Header>
+            <Card.Content  class="overflow-scroll no-scrollbar">
+                <Table.Root>
+                    <Table.Header><Table.Row>
+                        <Table.Head>Time</Table.Head>
+                        <Table.Head>Pair</Table.Head>
+                        <Table.Head>Price</Table.Head>
+                        <Table.Head>Vol.</Table.Head>
+                        <Table.Head>Taker</Table.Head>
+                        <Table.Head>dir.</Table.Head>
+                        <Table.Head>Maker</Table.Head>                    
+                    </Table.Row></Table.Header>
+                    <Table.Body>
+                        {#each last100Transactions as transaction }
+                        <Table.Row>
+                            <Table.Cell class="w-1/5 text-xs tabular-nums">
+                                {transaction.timestamp.toLocaleTimeString('en-GB')}.{transaction.timestamp.getMilliseconds()}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/5">
+                                {getMarketSymbolic(transaction.pair)}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/6">
+                                {transaction.price.toFixed(2)}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/8">
+                                {transaction.volume}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/8">
+                                {transaction.taker}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/6">
+                                {#if transaction.taker_side == 0}
+                                <p class="text-green-500">buy</p>
+                                {:else}
+                                <p class="text-red-500">sell</p>
+                                {/if}
+                            </Table.Cell>
+                            <Table.Cell class="w-1/8">
+                                {transaction.maker}
+                            </Table.Cell>
+                        </Table.Row>
+                        {/each}
+                    </Table.Body>
+                </Table.Root>
+            </Card.Content>
+        </Card.Root>
+        <Card.Root class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
+            <Card.Header>
+                <Card.Title>
                     Markets
-                </h2>
-            </div>
-            <Table divClass="w-full no-scrollbar border-2 border-pal2" color="secondary">
-                <TableHead>
-                    <TableHeadCell>Symbol</TableHeadCell>
-                    <TableHeadCell class="hidden sm:block text-left">Volume</TableHeadCell>
-                    <TableHeadCell class="text-right">Bid</TableHeadCell>
-                    <TableHeadCell class="text-left">Ask</TableHeadCell>
-                    <TableHeadCell class="hidden sm:block text-right">Volume</TableHeadCell>
-                </TableHead>
-                <TableBody>
-                    {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
-                        <TableBodyRow>
-                            <TableBodyCell>
+                </Card.Title>
+            </Card.Header>
+            <Card.Content  class="overflow-scroll">
+                <Table.Root>
+                    <Table.Header><Table.Row>
+                        <Table.Head>Symbol</Table.Head>
+                        <Table.Head class="hidden sm:table-cell text-left">Volume</Table.Head>
+                        <Table.Head class="text-right">Bid</Table.Head>
+                        <Table.Head class="text-left">Ask</Table.Head>
+                        <Table.Head class="hidden sm:table-cell text-right">Volume</Table.Head>           
+                    </Table.Row></Table.Header>
+                    <Table.Body>
+                       {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
+                        <Table.Row>
+                            <Table.Cell>
                                 {getMarketSymbolic(marketL1.pair)}
-                            </TableBodyCell>
-                            <TableBodyCell class="hidden sm:block text-left text-green-500 tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell class="hidden sm:table-cell text-left text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.volume}
                                 {:else}
                                 -
                                 {/if}
-                            </TableBodyCell>
-                            <TableBodyCell class="text-right font-bold text-green-500 tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell class="text-right font-bold text-green-500 tabular-nums">
                                 {#if marketL1.orderbook.best_bid != null}
                                 {marketL1.orderbook.best_bid.price.toFixed(3)}
                                 {:else}
                                 -
                                 {/if}
-                            </TableBodyCell>
-                            <TableBodyCell class="text-left font-bold text-red-500 tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell class="text-left font-bold text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
                                 {marketL1.orderbook.best_ask.price.toFixed(3)}
                                 {:else}
                                 -
                                 {/if}
-                            </TableBodyCell>
-                            <TableBodyCell class="hidden sm:block text-right text-red-500 tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell class="hidden sm:table-cell text-right text-red-500 tabular-nums">
                                 {#if marketL1.orderbook.best_ask != null}
                                 {marketL1.orderbook.best_ask.volume}
                                 {:else}
                                 -
                                 {/if}
-                            </TableBodyCell>
-                        </TableBodyRow>
+                            </Table.Cell>
+                        </Table.Row>
                     {/each}
-                </TableBody>
-            </Table>
-        </div>
-        <div class="flex flex-col items-center w-full min-h-125 h-[45vh]">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full p-4 bg-pal2 ">
-                <h2 class="text-2xl">
-                    Command Latency (ms)
-                </h2>
-                <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1">
-                    <p class="font-light text-xs md:text-md">p50</p>
-                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
-                    <p class="font-light text-xs md:text-md">p90</p>
-                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
-                    <p class="font-light text-xs md:text-md">p99.9</p>
-                    <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
-                </div>
-            </div>
-            <div class="relative w-full flex-1 border-2 border-pal2 bg-slate-900">
-                <canvas bind:this={latency_chart_canvas}></canvas>
-            </div>
-        </div>
+                    </Table.Body>
+                </Table.Root>
+            </Card.Content>
+        </Card.Root>
+        <Card.Root class="flex flex-col w-full min-h-100">
+            <Card.Header>
+                <Card.Title>
+                    Command Latency
+                </Card.Title>
+                <Card.Description>
+                    In milliseconds. 
+                </Card.Description>
+                <Card.Action>
+                    <div class="flex items-start gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1">
+                        <p class="font-light text-xs md:text-md">p50</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
+                        <p class="font-light text-xs md:text-md">p90</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p90.toFixed(2)}</p>
+                        <p class="font-light text-xs md:text-md">p99.9</p>
+                        <p class="font-bold text-xl sm:text-4xl tabular-nums">{exchangeState.metrics.p999.toFixed(2)}</p>
+                    </div>
+                </Card.Action>
+            </Card.Header>
+            <Card.Content class="w-full">
+                <Chart.Container config={chartConfig}>
+                    <AreaChart data={latency_data}
+                        legend
+                        x="date"
+                        yDomain={[0, null]}
+                        series={[
+                            { key: 'p999', label: 'p99.9', color: '#5490F0' },
+                            { key: 'p90', label: 'p90', color: '#295eb3' },
+                            { key: 'p50', label: 'p50', color: '#0b156e' },
+                        ]}  
+                    >
+                    	<!-- {#snippet marks()}
+                        <LinearGradient class="from-primary/50 to-primary/1" vertical>
+                            {#snippet children({ gradient })}
+                                <Area line={{ class: 'stroke-primary' }} fill={gradient} />
+                            {/snippet}
+                        </LinearGradient>
+                        {/snippet}   -->
+                    </AreaChart>
+                    </Chart.Container>
+            </Card.Content>
+        </Card.Root>
     </div>
     <div class="flex w-full justify-between mt-4 py-4 px-4 bg-mist-950 text-pal2">
         <div class="flex gap-2">
             <p>(C) Teun van Wezel</p>
-            <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><GithubSolid /></a>
-            <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><LinkedinSolid /></a>
+            <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><RiGithubFill /></a>
+            <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><RiLinkedinBoxFill /></a>
         </div>
         <div>
             Footer 

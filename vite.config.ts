@@ -26,7 +26,10 @@ export default defineConfig({
 				fallback: undefined,
 				precompress: false,
 				strict: true
-			})
+			}),
+			alias: {
+			"@/*": "./path/to/lib/*",
+			},
 		})
 	]
 });
