@@ -111,6 +111,8 @@
         return sum_of_tpss / last100Transactions.length;
     }
 
+    // Calculate TPS every second (instead of derive rune, since that stops any
+    // updates as soon as transactions stop coming in).
     $effect(() => {
         const id = setInterval(() => {
             tps100 = getTps100(last100Transactions);
