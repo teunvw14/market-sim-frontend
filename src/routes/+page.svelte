@@ -304,14 +304,14 @@
     </header>
     <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
         <Dialog.Root>
-            <Dialog.Trigger class={"w-full h-16 text-pal4 + hover:cursor-pointer " + buttonVariants({ variant: "default" })}>
+            <Dialog.Trigger class={buttonVariants({ variant: "default" }) + " w-full h-16 text-primary border-2 + hover:cursor-pointer"}>
                 <h1 class="text-xl">What is this?</h1>
             </Dialog.Trigger>
             <Dialog.Content class="sm:max-w-xl">
                 <Dialog.Header>
                 <Dialog.Title>What is this?</Dialog.Title>
                 <Dialog.Description>
-                    This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-pal1">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots prefer to take it easy though.
+                    This is my market simulator. You're seeing a live view of bots trading on a <a href="https://github.com/teunvw14/market-sim-backend" target="_blank" class="underline text-primary">custom Exchange Server</a> that I wrote in Rust. This backend can handle up to <b>~20 million orders / second</b>. The bots prefer to take it easy though.
                     <ul class="list-decimal list-outside ps-5 space-y-1">
                         <li><b>Transactions</b>: Live as they happen on the exchange server.</li>
                         <li><b>Markets</b>: The best bid/ask. Shows volumes on bigger screens.</li>
@@ -338,7 +338,7 @@
                     Transactions
                 </Card.Title>
                 <Card.Action>
-                    <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1 tabular-nums">
+                    <div class="flex flex-initial gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-primary bg-background border-primary tabular-nums">
                         <p class="font-light">TPS</p> 
                         <p class="font-bold text-2xl sm:text-4xl">{tps100.toFixed(1)}</p>
                     </div>
@@ -454,7 +454,7 @@
                         In milliseconds.
                     </Card.Description>
                 </div>
-                <div class="flex gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-pal1 border-pal1">
+                <div class="flex gap-1 md:gap-2 border-2 rounded-xl px-2 py-1 text-primary bg-background border-primary">
                     <p class="font-light text-xs md:text-md">p50</p>
                     <p class="font-bold text-xl sm:text-3xl tabular-nums">{exchangeState.metrics.p50.toFixed(2)}</p>
                     <p class="font-light text-xs md:text-md">p90</p>
