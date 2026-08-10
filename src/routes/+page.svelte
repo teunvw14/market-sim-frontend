@@ -94,18 +94,33 @@
     let exchangeState: ExchangeState = $state(DEFAULT_EXCHANGE_STATE);
     let exchangeAssets: Asset[] = $state([]);
     let last100Transactions: Transaction[] = $state([]);
-    let tps100: number = $derived.by(() => {
-        let first = last100Transactions[0];
-        let last = last100Transactions[last100Transactions.length - 1];
-        if (first != undefined && last != undefined) {
-            let first_as_ms = first.timestamp.getTime();
-            let last_as_ms = last.timestamp.getTime();
-            return 1000 * last100Transactions.length / (first_as_ms - last_as_ms);
-        } else {
+    let tps100: number = $state(0);
+
+    function getTps100(last100Transactions) {
+        if (last100Transactions.length == 0) {
             return 0;
         }
+
+        // Calculate the moving average of tps.
+        let sum_of_tpss = 0;
+        let now = Date.now();
+        for (let i = 0; i < last100Transactions.length; i++) {
+            let increment_s = (now - last100Transactions[i].timestamp.getTime()) / 1000;
+            sum_of_tpss += (i + 1) / increment_s;
+        }
+        return sum_of_tpss / last100Transactions.length;
     }
-    );
+
+    $effect(() => {
+        const id = setInterval(() => {
+            tps100 = getTps100(last100Transactions);
+        }, 1000);
+
+        return () => {
+            clearInterval(id);
+        };
+    });
+
     let receivedAssetsMessage = false;
 
     async function decodeFromBlob(blob: Blob): Promise<unknown> {
