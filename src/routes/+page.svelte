@@ -60,7 +60,7 @@
     }
 
     interface ExchangeMetrics {
-        timestamp: number,
+        timestamp: Date,
         p50: number,
         p90: number,
         p999: number,
@@ -199,6 +199,7 @@
         // Ensure that the timestamp is larger than the last,
         // so that we're not registering the same metrics twice
         if (metricsDecoded[0] > exchangeState.metrics.timestamp) {
+            
             exchangeState.metrics.timestamp = metricsDecoded[0];
             exchangeState.metrics.p50  = metricsDecoded[1] / 1000;
             exchangeState.metrics.p90  = metricsDecoded[2] / 1000;
@@ -211,7 +212,9 @@
 
             latency_data.push(
                 {
-                    date: new Date(exchangeState.metrics.timestamp),
+                    // Constructor expects UNIX timestamp in ms scale, but the timestamp
+                    // on the server-sent metrics are in seconds, hence the 1000x.
+                    date: new Date(1000 * exchangeState.metrics.timestamp),
                     p50: exchangeState.metrics.p50,
                     p90: exchangeState.metrics.p90,
                     p999: exchangeState.metrics.p999,
@@ -245,7 +248,6 @@
             // comes first)
             last100Transactions.unshift(transaction);
         }
-
     };
 
     async function handleMessage(i: Websocket, ev: MessageEvent) {
@@ -266,38 +268,6 @@
     const chartConfig = {
 
     } satisfies Chart.ChartConfig;
-
-    let latency_chart_canvas: HTMLCanvasElement;
-    let chart: Chart | undefined;
-
-    // $effect(() => {
-    //     chart = new Chart(
-    //         latency_chart_canvas,
-    //         {
-    //             type: 'line',
-    //             data: {
-    //                 labels: [],
-    //                 datasets: [
-    //                     { label: 'p50', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#5490F077", pointRadius: 1, pointHoverRadius: 12 },
-    //                     { label: 'p90', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#295eb377", pointRadius: 1, pointHoverRadius: 12 },
-    //                     { label: 'p99.9', data: [], borderWidth: 2, borderColor: "#a8c7f7", backgroundColor: "#0b156e77", pointRadius: 1, pointHoverRadius: 12 },
-    //                 ]
-    //             },
-    //             options: {
-    //                 scales: { 
-    //                     x: { type: 'time', ticks: { maxTicksLimit: 2 }, grid: { color: '#ffffff33' }},
-    //                     y: { ticks: { maxTicksLimit: 12 }, grid: { color: '#ffffff33' } },
-    //                 },
-    //                 color: '#e5e7eb',
-    //                 animation: false,
-    //                 fill: true,
-    //                 maintainAspectRatio: false,
-    //                 responsive: true,
-    //             }
-    //         }
-    //     );
-    // })
-
 
     function onConnOpen() {
         console.log("Opened server connection!"); 
@@ -500,9 +470,9 @@
                         x="date"
                         yDomain={[0, null]}
                         series={[
-                            { key: 'p999', label: 'p99.9', color: '#2b3bc4' },
-                            { key: 'p90', label: 'p90', color: '#295eb3' },
                             { key: 'p50', label: 'p50', color: '#5490F0' },
+                            { key: 'p90', label: 'p90', color: '#295eb3' },
+                            { key: 'p999', label: 'p99.9', color: '#2b3bc4' },
                         ]}
                         props={{ xAxis: { tickSpacing: 100 } }}
                     >
@@ -516,7 +486,7 @@
                                 vertical
                             >
                                 {#snippet children({ gradient })}
-                                    <Area seriesKey={s.key} line={{ stroke: s.color }} fill={gradient} fillOpacity={0.9} />
+                                    <Area seriesKey={s.key} line={{ stroke: s.color }} fill={gradient} fillOpacity={1} />
                                 {/snippet}
                             </LinearGradient>
                         {/each}
@@ -526,15 +496,18 @@
             </Card.Content>
         </Card.Root>
     </div>
-    <div class="flex w-full justify-between mt-4 py-4 px-8 bg-mist-950 text-pal2">
+    <footer class="flex w-full justify-between mt-4 py-4 px-8 bg-card text-lg">
         <div class="flex gap-2">
             <p>(C) Teun van Wezel</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+            <p>
+                Find me on: 
+            </p>
             <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><RiGithubFill /></a>
             <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><RiLinkedinBoxFill /></a>
         </div>
-    </div>
+    </footer>
 </div>
 
 
