@@ -412,7 +412,7 @@
                     Markets
                 </Card.Title>
             </Card.Header>
-            <Card.Content  class="overflow-scroll">
+            <Card.Content  class="overflow-scroll no-scrollbar">
                 <Table.Root>
                     <Table.Header><Table.Row>
                         <Table.Head>Symbol</Table.Head>
