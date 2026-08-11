@@ -341,7 +341,6 @@
 
 <ModeWatcher />
 
-
 <div class="w-full flex flex-col items-center text-pal-4 min-w-82">
     <header class="flex justify-between items-center p-4 sm:p-8 w-full bg-card">
         <h1 class="text-lg sm:text-4xl font-bold">
