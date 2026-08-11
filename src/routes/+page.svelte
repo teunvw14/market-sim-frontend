@@ -447,7 +447,7 @@
                     Markets
                 </Card.Title>
                 <Select.Root type="single" name="showMarket" bind:value={marketSelectedStr}>
-                    <Select.Trigger class="w-full p-0 items-center">
+                    <Select.Trigger class="w-full p-0 items-center hover:cursor-pointer">
                         {#if marketSelected == undefined}
                             No markets available.
                         {:else}
@@ -493,7 +493,7 @@
                     </Select.Trigger>
                     <Select.Content>
                         {#each exchangeState.markets as market (`${market.pair.primary},${market.pair.secondary}`) }
-                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between">
+                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between hover:cursor-pointer">
                             <div class=" w-1/4 sm:w-1/6 font-black font-heading">
                                 {getMarketSymbolic(market.pair)}
                             </div>
@@ -560,6 +560,7 @@
                                 class: 'cursor-crosshair'
                             }
                         }}
+                        padding={defaultChartPadding({ left: 25 })}
                     >
                     </AreaChart>
                 </Chart.Container>
