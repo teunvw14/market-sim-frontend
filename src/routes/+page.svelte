@@ -22,6 +22,7 @@
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Table from "$lib/components/ui/table/index.js";
     import * as Chart from "$lib/components/ui/chart/index.js";
+    import * as Select from "$lib/components/ui/select/index.js";
 
     // layerchart
     import { Area, AreaChart, defaultChartPadding, LinearGradient } from "layerchart";
@@ -49,9 +50,15 @@
         volume: number,
     }
 
-    interface MarketL1 {
+    interface PriceTick {
+        timestamp: Date,
+        price: number,
+    }
+
+    interface Market {
         pair: AssetIdPair,
-        orderbook: OrderbookL1,
+        orderbookl1: OrderbookL1,
+        priceHistory: PriceTick[]
     }
 
     interface OrderbookL1 {
@@ -67,7 +74,7 @@
     }
 
     interface ExchangeState {
-        l1s: MarketL1[],
+        markets: Market[],
         metrics: ExchangeMetrics,
     }
 
@@ -82,9 +89,9 @@
     }
 
     let DEFAULT_EXCHANGE_STATE: ExchangeState = {
-        l1s: [],
+        markets: [],
         metrics: {
-            timestamp: 0,
+            timestamp: new Date(0),
             p50: 0,
             p90: 0,
             p999: 0,
@@ -96,7 +103,7 @@
     let last100Transactions: Transaction[] = $state([]);
     let tps100: number = $state(0);
 
-    function getTps100(last100Transactions) {
+    function getTps100(last100Transactions: Transaction[]) {
         if (last100Transactions.length == 0) {
             return 0;
         }
@@ -173,6 +180,9 @@
         let secondary_str = getAssetSymbol(assetIdPair.secondary);
         return primary_str + "/" + secondary_str
     }
+    function getMarketFromSymbolic(pair: string): Market | undefined {
+        return exchangeState.markets.find((market) => {return getMarketSymbolic(market.pair) == pair;});
+    }
 
     // Function to output & echo received messages
     async function updateExchangeState(messageData: any) {
@@ -183,13 +193,7 @@
         
         // Update l1s
 
-        exchangeState.l1s = []
         for (const l1Decoded of l1sDecoded) {
-            let pair: AssetIdPair = {
-                primary: l1Decoded[0][0],
-                secondary: l1Decoded[0][1]
-            };
-
             // Check for null values in best_bid / best_ask
             let best_bid = l1Decoded[1][0];
             let best_ask = l1Decoded[1][1];
@@ -199,16 +203,36 @@
             if (best_ask != null) {
                 best_ask = { price: parse_mp_price(l1Decoded[1][1][0]), volume: l1Decoded[1][1][1]};
             }
-            let orderbook: OrderbookL1 = {
+
+            let orderbookl1: OrderbookL1 = {
                 best_bid, 
                 best_ask,
-            }
+            };
+            let priceTick: PriceTick = {
+                timestamp: new Date(),
+                price: (best_ask.price + best_bid.price) / 2
+            };
 
-            let marketL1: MarketL1 = {
-                pair,
-                orderbook
+            // Check if pair already exists, if so update, otherwise create new.
+            let pair: AssetIdPair = {
+                primary: l1Decoded[0][0],
+                secondary: l1Decoded[0][1]
+            };
+            let existingMarket = exchangeState.markets.find((market) => market.pair.primary === pair.primary && market.pair.secondary === pair.secondary);
+            if (existingMarket != undefined) {
+                existingMarket.orderbookl1 = orderbookl1;
+                existingMarket.priceHistory.push(priceTick);
+                // Don't save more than 600 ticks
+                existingMarket.priceHistory = existingMarket.priceHistory.slice(-600);
             }
-            exchangeState.l1s.push(marketL1)
+            else {
+                let market: Market = {
+                    pair,
+                    orderbookl1,
+                    priceHistory: [priceTick]
+                }
+                exchangeState.markets.push(market)
+            }
         }
 
         // Update exchange metrics
@@ -282,6 +306,17 @@
     let latency_arrival_times = $state([]);
 	let latency_data = $state([]);
 
+    let marketSelectedStr = $state("");
+    let marketSelected: Market | undefined = $derived.by(() => {
+        if (marketSelectedStr != "") {
+            return getMarketFromSymbolic(marketSelectedStr)
+        } 
+        if (exchangeState.markets.length > 0) {
+            return exchangeState.markets[0];
+        }
+        return undefined;
+    });
+
     const chartConfig = {
 
     } satisfies Chart.ChartConfig;
@@ -319,7 +354,7 @@
             {/if}
         </div>
     </header>
-    <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full lg:w-3/4 2xl:w-2/5">
+    <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full max-w-180">
         <Dialog.Root>
             <Dialog.Trigger class={buttonVariants({ variant: "default" }) + " w-full h-16 text-primary border-2 + hover:cursor-pointer"}>
                 <h1 class="text-xl">What is this?</h1>
@@ -406,59 +441,129 @@
                 </Table.Root>
             </Card.Content>
         </Card.Root>
-        <Card.Root class="flex flex-col w-full min-h-100 h-[45vh] overflow-clip">
-            <Card.Header>
+        <Card.Root class="flex flex-col w-full">
+            <Card.Header class="flex flex-col items-start xs:flex-row xs:items-center">
                 <Card.Title>
                     Markets
                 </Card.Title>
+                <Select.Root type="single" name="showMarket" bind:value={marketSelectedStr}>
+                    <Select.Trigger class="w-full p-0 items-center">
+                        {#if marketSelected == undefined}
+                            No markets available.
+                        {:else}
+                        <div class="w-1/4 sm:w-1/6 font-black font-heading">
+                            {getMarketSymbolic(marketSelected.pair)}
+                        </div>
+                        <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
+                            {#if marketSelected.orderbookl1.best_bid != null}
+                            {marketSelected.orderbookl1.best_bid.volume}
+                            {:else}
+                            -
+                            {/if}
+                        </div>
+                        <div class="text-right font-bold text-green-500 tabular-nums w-1/4 sm:w-1/6">
+                            {#if marketSelected.orderbookl1.best_bid != null}
+                            {marketSelected.orderbookl1.best_bid.price.toFixed(3)}
+                            {:else}
+                            -
+                            {/if}
+                        </div>
+                        <div class="text-center text-slate-400 tabular-nums w-1/4 sm:w-1/6">
+                            {#if marketSelected.orderbookl1.best_ask != null && marketSelected.orderbookl1.best_ask != null}
+                            {(marketSelected.orderbookl1.best_ask.price - marketSelected.orderbookl1.best_bid.price).toFixed(3)}
+                            {:else}
+                            -
+                            {/if}
+                        </div>
+                        <div class="text-left font-bold text-red-500 tabular-nums w-1/4 sm:w-1/6">
+                            {#if marketSelected.orderbookl1.best_ask != null}
+                            {marketSelected.orderbookl1.best_ask.price.toFixed(3)}
+                            {:else}
+                            -
+                            {/if}
+                        </div>
+                        <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/4 sm:w-1/6">
+                            {#if marketSelected.orderbookl1.best_ask != null}
+                            {marketSelected.orderbookl1.best_ask.volume}
+                            {:else}
+                            -
+                            {/if}
+                        </div>
+                        {/if}
+                    </Select.Trigger>
+                    <Select.Content>
+                        {#each exchangeState.markets as market (`${market.pair.primary},${market.pair.secondary}`) }
+                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between">
+                            <div class=" w-1/4 sm:w-1/6 font-black font-heading">
+                                {getMarketSymbolic(market.pair)}
+                            </div>
+                            <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
+                                {#if market.orderbookl1.best_bid != null}
+                                {market.orderbookl1.best_bid.volume}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-right font-bold text-green-500 tabular-nums w-1/4 sm:w-1/6">
+                                {#if market.orderbookl1.best_bid != null}
+                                {market.orderbookl1.best_bid.price.toFixed(3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-center text-slate-400 tabular-nums w-1/4 sm:w-1/6">
+                                {#if market.orderbookl1.best_ask != null && market.orderbookl1.best_ask != null}
+                                {(market.orderbookl1.best_ask.price - market.orderbookl1.best_bid.price).toFixed(3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-left font-bold text-red-500 tabular-nums w-1/4 sm:w-1/6">
+                                {#if market.orderbookl1.best_ask != null}
+                                {market.orderbookl1.best_ask.price.toFixed(3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/4 sm:w-1/6">
+                                {#if market.orderbookl1.best_ask != null}
+                                {market.orderbookl1.best_ask.volume}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                        </Select.Item>
+                        {/each}
+                    </Select.Content>
+                </Select.Root>
             </Card.Header>
-            <Card.Content  class="overflow-scroll no-scrollbar">
-                <Table.Root>
-                    <Table.Header><Table.Row>
-                        <Table.Head>Symbol</Table.Head>
-                        <Table.Head class="hidden min-[480px]:table-cell text-left">Volume</Table.Head>
-                        <Table.Head class="text-right">Bid</Table.Head>
-                        <Table.Head class="text-left">Ask</Table.Head>
-                        <Table.Head class="hidden min-[480px]:table-cell text-right">Volume</Table.Head>           
-                    </Table.Row></Table.Header>
-                    <Table.Body>
-                       {#each exchangeState.l1s as marketL1 (`${marketL1.pair.primary},${marketL1.pair.secondary}`) }
-                        <Table.Row>
-                            <Table.Cell>
-                                {getMarketSymbolic(marketL1.pair)}
-                            </Table.Cell>
-                            <Table.Cell class="hidden min-[480px]:table-cell text-left text-green-500 tabular-nums">
-                                {#if marketL1.orderbook.best_bid != null}
-                                {marketL1.orderbook.best_bid.volume}
-                                {:else}
-                                -
-                                {/if}
-                            </Table.Cell>
-                            <Table.Cell class="text-right font-bold text-green-500 tabular-nums">
-                                {#if marketL1.orderbook.best_bid != null}
-                                {marketL1.orderbook.best_bid.price.toFixed(3)}
-                                {:else}
-                                -
-                                {/if}
-                            </Table.Cell>
-                            <Table.Cell class="text-left font-bold text-red-500 tabular-nums">
-                                {#if marketL1.orderbook.best_ask != null}
-                                {marketL1.orderbook.best_ask.price.toFixed(3)}
-                                {:else}
-                                -
-                                {/if}
-                            </Table.Cell>
-                            <Table.Cell class="hidden min-[480px]:table-cell text-right text-red-500 tabular-nums">
-                                {#if marketL1.orderbook.best_ask != null}
-                                {marketL1.orderbook.best_ask.volume}
-                                {:else}
-                                -
-                                {/if}
-                            </Table.Cell>
-                        </Table.Row>
-                    {/each}
-                    </Table.Body>
-                </Table.Root>
+            <Card.Content>
+                {#if marketSelected === undefined}
+                    No market selected.
+                {:else}
+                <Chart.Container config={chartConfig} class="w-full h-75 aspect-auto">
+                    <AreaChart
+                        brush
+                        data={marketSelected.priceHistory}
+                        x="timestamp"
+                        y="price"
+                        yDomain={[null, null]}
+                        series={[
+                            { key: 'price', label: 'Price', color: 'var(--chart-1)' },
+                        ]}
+                        props={{
+                            xAxis: { tickSpacing: 100 },
+                            canvas: {
+                                class: 'cursor-crosshair'
+                            },
+                            svg: {
+                                class: 'cursor-crosshair'
+                            }
+                        }}
+                    >
+                    </AreaChart>
+                </Chart.Container>
+                {/if}
             </Card.Content>
         </Card.Root>
         <Card.Root class="flex flex-col w-full">
