@@ -24,7 +24,7 @@ export default defineConfig({
 				pages: outDir,
 				assets: outDir,
 				fallback: undefined,
-				precompress: false,
+				precompress: true,
 				strict: true
 			}),
 			alias: {
