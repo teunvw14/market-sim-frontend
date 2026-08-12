@@ -12,9 +12,16 @@
         WebsocketEvent,
     } from "websocket-ts";
 
-    import { ModeWatcher } from "mode-watcher";
+    import { ModeWatcher, setMode, mode } from "mode-watcher";
+    function handleModeChange() {
+		if (mode.current === "light") {
+			setMode("dark");
+		} else {
+			setMode("light");
+		}
+	}
 
-    import { RiGithubFill, RiLinkedinBoxFill, RiArrowRightUpLine, RiCloseLine } from "svelte-remixicon";
+    import { RiGithubFill, RiLinkedinBoxFill, RiArrowRightUpLine, RiCloseLine, RiMoonFill, RiSunFill } from "svelte-remixicon";
 
     // shadcn Components
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
@@ -204,13 +211,17 @@
                 best_ask = { price: parse_mp_price(l1Decoded[1][1][0]), volume: l1Decoded[1][1][1]};
             }
 
+            let priceTick: null | PriceTick = null;
+            if (best_ask != null && best_bid != null) {
+                priceTick = {
+                    timestamp: new Date(),
+                    price: (best_ask.price + best_bid.price) / 2
+                };
+            }
+
             let orderbookl1: OrderbookL1 = {
                 best_bid, 
                 best_ask,
-            };
-            let priceTick: PriceTick = {
-                timestamp: new Date(),
-                price: (best_ask.price + best_bid.price) / 2
             };
 
             // Check if pair already exists, if so update, otherwise create new.
@@ -221,7 +232,9 @@
             let existingMarket = exchangeState.markets.find((market) => market.pair.primary === pair.primary && market.pair.secondary === pair.secondary);
             if (existingMarket != undefined) {
                 existingMarket.orderbookl1 = orderbookl1;
-                existingMarket.priceHistory.push(priceTick);
+                if (priceTick) {
+                    existingMarket.priceHistory.push(priceTick);
+                }
                 // Don't save more than 600 ticks
                 existingMarket.priceHistory = existingMarket.priceHistory.slice(-600);
             }
@@ -229,7 +242,10 @@
                 let market: Market = {
                     pair,
                     orderbookl1,
-                    priceHistory: [priceTick]
+                    priceHistory: []
+                }
+                if (priceTick) {
+                    market.priceHistory.push(priceTick);
                 }
                 exchangeState.markets.push(market)
             }
@@ -242,6 +258,7 @@
         if (metricsDecoded[0] > exchangeState.metrics.timestamp) {
             
             exchangeState.metrics.timestamp = metricsDecoded[0];
+            // Metrics are in us, convert into ms with `/ 1000`
             exchangeState.metrics.p50  = metricsDecoded[1] / 1000;
             exchangeState.metrics.p90  = metricsDecoded[2] / 1000;
             exchangeState.metrics.p999 = metricsDecoded[3] / 1000;
@@ -344,20 +361,29 @@
 
 <div class="w-full flex flex-col items-center text-pal-4 min-w-82">
     <header class="flex justify-between items-center p-4 sm:p-8 w-full bg-card">
-        <h1 class="text-lg sm:text-4xl font-bold">
-            Market Sim Viewer
-        </h1>
+        <div class="flex items-center gap-4">
+            <h1 class="text-lg sm:text-4xl font-bold">
+                Market Sim Viewer
+            </h1>
+            <Button onclick={handleModeChange} class="aspect-square p-0 w-8 h-8">
+                {#if mode.current === "dark"}
+                    <RiMoonFill />
+                    {:else}
+                    <RiSunFill />
+                {/if}
+            </Button>
+        </div>
         <div class="flex items-center justify-between gap-2 font-bold text-sm sm:text-xl">
             {#if exchangeConnected == true}
-                <div class="bg-green-500 border border-gray-300 rounded-3xl w-3 h-3"></div> Connected
+            <div class="bg-green-500 border border-gray-300 rounded-full w-2 h-2"></div> Connected
             {:else}
-                <div class="bg-red-500 border border-gray-300 rounded-3xl w-3 h-3"></div> Disconnected
+            <div class="bg-red-500 border border-gray-300 rounded-full w-2 h-2"></div> Disconnected
             {/if}
         </div>
     </header>
     <div class="flex flex-col justify-around items-center gap-8 my-8 px-4 w-full max-w-180">
         <Dialog.Root>
-            <Dialog.Trigger class={buttonVariants({ variant: "default" }) + " w-full h-16 text-primary border-2 + hover:cursor-pointer"}>
+            <Dialog.Trigger class={buttonVariants({ variant: "default" }) + " w-full h-16 text-primary border-2"}>
                 <h1 class="text-xl">What is this?</h1>
             </Dialog.Trigger>
             <Dialog.Content class="sm:max-w-xl">
@@ -379,7 +405,7 @@
                     <Button href="https://github.com/teunvw14/market-sim-frontend" target="_blank">
                         Frontend Code <RiArrowRightUpLine />
                     </Button>
-                    <Dialog.Close class={buttonVariants({ variant: "default" }) + " bg-red-500 hover:bg-red-400 hover:cursor-pointer"}>
+                    <Dialog.Close class={buttonVariants({ variant: "default" }) + " bg-red-500 hover:bg-red-400"}>
                         Close <RiCloseLine />
                     </Dialog.Close>
                 </Dialog.Footer>
@@ -448,11 +474,11 @@
                     Markets
                 </Card.Title>
                 <Select.Root type="single" name="showMarket" bind:value={marketSelectedStr}>
-                    <Select.Trigger class="w-full p-0 items-center hover:cursor-pointer">
+                    <Select.Trigger class="w-full p-0 items-center">
                         {#if marketSelected == undefined}
                             No markets available.
                         {:else}
-                        <div class="w-1/4 sm:w-1/6 font-black font-heading">
+                        <div class="w-1/4 sm:w-1/6 font-black font-heading xs:text-lg">
                             {getMarketSymbolic(marketSelected.pair)}
                         </div>
                         <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
@@ -494,8 +520,8 @@
                     </Select.Trigger>
                     <Select.Content>
                         {#each exchangeState.markets as market (`${market.pair.primary},${market.pair.secondary}`) }
-                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between hover:cursor-pointer">
-                            <div class=" w-1/4 sm:w-1/6 font-black font-heading">
+                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between">
+                            <div class="w-1/4 sm:w-1/6 font-black font-heading xs:text-lg">
                                 {getMarketSymbolic(market.pair)}
                             </div>
                             <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
@@ -628,8 +654,8 @@
             <p>
                 Find me on: 
             </p>
-            <a href="https://github.com/teunvw14" target="_blank" class="text-pal2"><RiGithubFill /></a>
-            <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-pal2"><RiLinkedinBoxFill /></a>
+            <a href="https://github.com/teunvw14" target="_blank" class="text-foregrond"><RiGithubFill /></a>
+            <a href="https://www.linkedin.com/in/teun-van-wezel/" target="_blank" class="text-foreground"><RiLinkedinBoxFill /></a>
         </div>
     </footer>
 </div>

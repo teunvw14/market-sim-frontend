@@ -107,7 +107,7 @@ display: none;                /* Chrome, Safari */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.148 0.004 228.8);
-  --card: oklch(1 0 0);
+  --card: oklch(97.822% 0.01334 60.338);
   --card-foreground: oklch(0.148 0.004 228.8);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.148 0.004 228.8);
@@ -181,4 +181,8 @@ h2 {
 }
 h3 {
   font-family: var(--font-heading);
+}
+
+button:hover {
+  cursor: pointer;
 }
