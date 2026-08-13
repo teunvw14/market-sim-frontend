@@ -2,6 +2,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
     </style>
+    <title>
+        Market Sim
+    </title>
 </svelte:head>
 <script lang="ts">
     import {
@@ -478,7 +481,7 @@
                         {#if marketSelected == undefined}
                             No markets available.
                         {:else}
-                        <div class="w-1/4 sm:w-1/6 font-black font-heading xs:text-lg">
+                        <div class="w-1/4 sm:w-1/6 font-black font-heading text-foreground xs:text-lg">
                             {getMarketSymbolic(marketSelected.pair)}
                         </div>
                         <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
@@ -521,7 +524,7 @@
                     <Select.Content>
                         {#each exchangeState.markets as market (`${market.pair.primary},${market.pair.secondary}`) }
                         <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between">
-                            <div class="w-1/4 sm:w-1/6 font-black font-heading xs:text-lg">
+                            <div class="w-1/4 sm:w-1/6 font-black font-heading text-foreground xs:text-lg">
                                 {getMarketSymbolic(market.pair)}
                             </div>
                             <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
