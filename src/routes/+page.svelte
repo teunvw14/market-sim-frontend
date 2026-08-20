@@ -163,7 +163,7 @@
     }
 
     // Initialize WebSocket with buffering and 1s reconnection delay
-    const ws = new WebsocketBuilder("ws://127.0.0.1:5556")
+    const ws = new WebsocketBuilder("wss://teunvanwezel.nl/ws/")
         .withBuffer(new ArrayQueue()) // buffer messages when disconnected
         .withBackoff(new ExponentialBackoff(1000, 6)) // retry every 1s, max of 64s
         .build();
