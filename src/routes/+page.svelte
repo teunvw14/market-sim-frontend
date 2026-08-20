@@ -542,7 +542,7 @@
                                 {/if}
                             </div>
                             <div class="text-center text-slate-400 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_ask != null && market.orderbookl1.best_ask != null}
+                                {#if market.orderbookl1.best_bid != null && market.orderbookl1.best_ask != null}
                                 {(market.orderbookl1.best_ask.price - market.orderbookl1.best_bid.price).toFixed(3)}
                                 {:else}
                                 -
