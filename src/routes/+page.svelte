@@ -98,6 +98,16 @@
         timestamp: Date,
     }
 
+    function smartDigits(num: number, digits: number) {
+        let fixed = num.toFixed(digits);
+        let precision = num.toPrecision(digits);
+        if (fixed.length < precision.length) {
+            return fixed;
+        } else {
+            return precision;
+        }
+    }
+
     let DEFAULT_EXCHANGE_STATE: ExchangeState = {
         markets: [],
         metrics: {
@@ -153,7 +163,7 @@
     }
 
     // Initialize WebSocket with buffering and 1s reconnection delay
-    const ws = new WebsocketBuilder("wss://teunvanwezel.nl/ws")
+    const ws = new WebsocketBuilder("ws://127.0.0.1:5556")
         .withBuffer(new ArrayQueue()) // buffer messages when disconnected
         .withBackoff(new ExponentialBackoff(1000, 6)) // retry every 1s, max of 64s
         .build();
@@ -477,90 +487,94 @@
                     Markets
                 </Card.Title>
                 <Select.Root type="single" name="showMarket" bind:value={marketSelectedStr}>
-                    <Select.Trigger class="w-full p-0 items-center">
+                    <Select.Trigger class="flex justify-between w-full px-3">
                         {#if marketSelected == undefined}
                             No markets available.
                         {:else}
-                        <div class="w-1/4 sm:w-1/6 font-black font-heading text-foreground xs:text-lg">
+                        <div class="w-2/5 font-black font-heading text-foreground xs:text-lg text-left overflow-x-clip">
                             {getMarketSymbolic(marketSelected.pair)}
                         </div>
-                        <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
-                            {#if marketSelected.orderbookl1.best_bid != null}
-                            {marketSelected.orderbookl1.best_bid.volume}
-                            {:else}
-                            -
-                            {/if}
-                        </div>
-                        <div class="text-right font-bold text-green-500 tabular-nums w-1/4 sm:w-1/6">
-                            {#if marketSelected.orderbookl1.best_bid != null}
-                            {marketSelected.orderbookl1.best_bid.price.toFixed(3)}
-                            {:else}
-                            -
-                            {/if}
-                        </div>
-                        <div class="text-center text-slate-400 tabular-nums w-1/4 sm:w-1/6">
-                            {#if marketSelected.orderbookl1.best_ask != null && marketSelected.orderbookl1.best_ask != null}
-                            {(marketSelected.orderbookl1.best_ask.price - marketSelected.orderbookl1.best_bid.price).toFixed(3)}
-                            {:else}
-                            -
-                            {/if}
-                        </div>
-                        <div class="text-left font-bold text-red-500 tabular-nums w-1/4 sm:w-1/6">
-                            {#if marketSelected.orderbookl1.best_ask != null}
-                            {marketSelected.orderbookl1.best_ask.price.toFixed(3)}
-                            {:else}
-                            -
-                            {/if}
-                        </div>
-                        <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/4 sm:w-1/6">
-                            {#if marketSelected.orderbookl1.best_ask != null}
-                            {marketSelected.orderbookl1.best_ask.volume}
-                            {:else}
-                            -
-                            {/if}
+                        <div class="flex w-3/5 gap-2">
+                            <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                {#if marketSelected.orderbookl1.best_bid != null}
+                                {marketSelected.orderbookl1.best_bid.volume}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-right font-bold text-green-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                {#if marketSelected.orderbookl1.best_bid != null}
+                                {smartDigits(marketSelected.orderbookl1.best_bid.price, 3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-center text-slate-400 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                {#if marketSelected.orderbookl1.best_ask != null && marketSelected.orderbookl1.best_bid != null}
+                                {smartDigits(marketSelected.orderbookl1.best_ask.price - marketSelected.orderbookl1.best_bid.price, 3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="text-left font-bold text-red-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                {#if marketSelected.orderbookl1.best_ask != null}
+                                {smartDigits(marketSelected.orderbookl1.best_ask.price, 3)}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
+                            <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                {#if marketSelected.orderbookl1.best_ask != null}
+                                {marketSelected.orderbookl1.best_ask.volume}
+                                {:else}
+                                -
+                                {/if}
+                            </div>
                         </div>
                         {/if}
                     </Select.Trigger>
                     <Select.Content>
                         {#each exchangeState.markets as market (`${market.pair.primary},${market.pair.secondary}`) }
-                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:w-full *:[span]:last:justify-between">
-                            <div class="w-1/4 sm:w-1/6 font-black font-heading text-foreground xs:text-lg">
+                        <Select.Item value={getMarketSymbolic(market.pair).toString()} class="*:[span]:last:flex *:[span]:last:w-full">
+                            <div class="w-2/5 font-black font-heading text-foreground xs:text-lg overflow-x-clip">
                                 {getMarketSymbolic(market.pair)}
                             </div>
-                            <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_bid != null}
-                                {market.orderbookl1.best_bid.volume}
-                                {:else}
-                                -
-                                {/if}
-                            </div>
-                            <div class="text-right font-bold text-green-500 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_bid != null}
-                                {market.orderbookl1.best_bid.price.toFixed(3)}
-                                {:else}
-                                -
-                                {/if}
-                            </div>
-                            <div class="text-center text-slate-400 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_bid != null && market.orderbookl1.best_ask != null}
-                                {(market.orderbookl1.best_ask.price - market.orderbookl1.best_bid.price).toFixed(3)}
-                                {:else}
-                                -
-                                {/if}
-                            </div>
-                            <div class="text-left font-bold text-red-500 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_ask != null}
-                                {market.orderbookl1.best_ask.price.toFixed(3)}
-                                {:else}
-                                -
-                                {/if}
-                            </div>
-                            <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/4 sm:w-1/6">
-                                {#if market.orderbookl1.best_ask != null}
-                                {market.orderbookl1.best_ask.volume}
-                                {:else}
-                                -
-                                {/if}
+                            <div class="flex w-3/5 gap-2">
+                                <div class="hidden xs:table-cell text-left text-green-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                    {#if market.orderbookl1.best_bid != null}
+                                    {market.orderbookl1.best_bid.volume}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </div>
+                                <div class="text-right font-bold text-green-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                    {#if market.orderbookl1.best_bid != null}
+                                    {smartDigits(market.orderbookl1.best_bid.price, 3)}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </div>
+                                <div class="text-center text-slate-400 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                    {#if market.orderbookl1.best_bid != null && market.orderbookl1.best_ask != null}
+                                    {smartDigits(market.orderbookl1.best_ask.price - market.orderbookl1.best_bid.price, 3)}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </div>
+                                <div class="text-left font-bold text-red-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                    {#if market.orderbookl1.best_ask != null}
+                                    {smartDigits(market.orderbookl1.best_ask.price, 3)}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </div>
+                                <div class="hidden xs:table-cell text-right text-red-500 tabular-nums w-1/3 xs:w-1/5 overflow-x-clip">
+                                    {#if market.orderbookl1.best_ask != null}
+                                    {market.orderbookl1.best_ask.volume}
+                                    {:else}
+                                    -
+                                    {/if}
+                                </div>
                             </div>
                         </Select.Item>
                         {/each}
